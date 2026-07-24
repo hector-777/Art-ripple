@@ -5,42 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>光 · 涟漪 — 触碰的回响</title>
 
-    <!-- ===== 字体 ===== -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,600;14..32,800&display=swap" rel="stylesheet" />
-
-    <!-- ===== p5.js ===== -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js">
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200;14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
 
     <style>
-        /* ===== 全局重置 ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
-            font-family: 'Inter', 'Helvetica Neue', sans-serif;
+            font-family: 'Inter', 'Helvetica Neue', -apple-system, sans-serif;
             background: #000;
             color: #fff;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* ===== 滚动条 ===== */
         ::-webkit-scrollbar {
-            width: 2px;
+            width: 1px;
         }
         ::-webkit-scrollbar-track {
             background: #000;
         }
         ::-webkit-scrollbar-thumb {
-            background: #555;
+            background: rgba(255, 255, 255, 0.15);
         }
 
-        /* ============================================================
-                   页面一：演示页 (全屏 canvas)
-                   ============================================================ */
+        /* ===== 作品页 ===== */
         #demo-section {
             position: relative;
             width: 100vw;
@@ -56,102 +52,136 @@
             height: 100% !important;
         }
 
-        /* ---- 左下角入口 ---- */
+        .watermark {
+            position: absolute;
+            top: 40px;
+            left: 44px;
+            z-index: 10;
+            font-size: 10px;
+            font-weight: 300;
+            letter-spacing: 0.25em;
+            color: rgba(255, 255, 255, 0.08);
+            text-transform: uppercase;
+            pointer-events: none;
+            user-select: none;
+        }
+
         .entry-link {
             position: absolute;
             bottom: 40px;
-            left: 40px;
+            left: 44px;
             z-index: 10;
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 300;
-            letter-spacing: 0.15em;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.2);
             text-decoration: none;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 10px 24px;
-            transition: all 0.5s ease;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 10px 28px;
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             cursor: pointer;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
+            background: transparent;
+            font-family: inherit;
             user-select: none;
         }
 
         .entry-link:hover {
             color: #fff;
-            border-color: rgba(255, 255, 255, 0.4);
-            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.03);
         }
 
-        /* ---- 右下角提示 ---- */
         .hint {
             position: absolute;
             bottom: 40px;
-            right: 40px;
+            right: 44px;
             z-index: 10;
-            font-size: 11px;
+            font-size: 9px;
             font-weight: 300;
-            letter-spacing: 0.08em;
-            color: rgba(255, 255, 255, 0.15);
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.06);
             text-align: right;
-            line-height: 1.6;
+            line-height: 2;
             pointer-events: none;
             user-select: none;
+            text-transform: uppercase;
         }
 
-        /* ============================================================
-                   页面二：说明页 (滚动内容)
-                   ============================================================ */
+        /* ===== 说明页 ===== */
         #about-section {
+            display: none;
             background: #000;
-            padding: 100px 5% 120px;
-            max-width: 1200px;
+            padding: 100px 8% 140px;
+            max-width: 1400px;
             margin: 0 auto;
+            min-height: 100vh;
         }
 
-        /* ---- 通用文字 ---- */
+        .back-link {
+            position: fixed;
+            top: 32px;
+            left: 32px;
+            z-index: 100;
+            font-size: 10px;
+            font-weight: 300;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.1);
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 8px 20px;
+            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            font-family: inherit;
+        }
+
+        .back-link:hover {
+            color: rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
         .about-block {
-            margin-bottom: 120px;
+            margin-bottom: 140px;
         }
-
         .about-block:last-child {
             margin-bottom: 0;
         }
 
-        /* ---- 标题区 ---- */
         .title-block {
-            margin-bottom: 80px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            padding-bottom: 60px;
+            margin-bottom: 100px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            padding-bottom: 64px;
         }
 
         .main-title {
-            font-size: clamp(48px, 10vw, 110px);
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            line-height: 1;
+            font-size: clamp(48px, 10vw, 120px);
+            font-weight: 700;
+            letter-spacing: -0.035em;
+            line-height: 1.02;
             color: #fff;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
 
         .main-title .light {
-            font-weight: 300;
-            color: rgba(255, 255, 255, 0.25);
+            font-weight: 200;
+            color: rgba(255, 255, 255, 0.12);
         }
 
         .sub-title {
-            font-size: clamp(14px, 1.4vw, 20px);
+            font-size: clamp(12px, 1vw, 16px);
             font-weight: 300;
-            letter-spacing: 0.2em;
-            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 0.3em;
+            color: rgba(255, 255, 255, 0.15);
             text-transform: uppercase;
         }
 
-        /* ---- 通用区块布局 ---- */
         .row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 60px;
+            gap: 80px 100px;
             align-items: start;
         }
 
@@ -162,140 +192,186 @@
             direction: ltr;
         }
 
+        .row.three {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
         .col-label {
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.15em;
+            font-size: 9px;
+            font-weight: 500;
+            letter-spacing: 0.25em;
             text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.08);
             margin-bottom: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            padding-top: 16px;
         }
 
         .col-heading {
-            font-size: clamp(26px, 3vw, 42px);
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            line-height: 1.2;
+            font-size: clamp(22px, 2.6vw, 36px);
+            font-weight: 500;
+            letter-spacing: -0.025em;
+            line-height: 1.15;
             color: #fff;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
 
         .col-text {
-            font-size: clamp(14px, 1.1vw, 17px);
+            font-size: clamp(13px, 1vw, 15.5px);
             font-weight: 300;
-            line-height: 1.9;
-            color: rgba(255, 255, 255, 0.55);
+            line-height: 2.1;
+            color: rgba(255, 255, 255, 0.4);
         }
 
         .col-text strong {
-            color: rgba(255, 255, 255, 0.8);
-            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 400;
         }
 
-        /* ---- 视觉占位 ---- */
         .visual-placeholder {
             width: 100%;
             aspect-ratio: 4/3;
-            background: #111;
+            background: #0a0a0a;
             border: 1px solid rgba(255, 255, 255, 0.04);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
-            letter-spacing: 0.1em;
-            color: rgba(255, 255, 255, 0.1);
+            font-size: 10px;
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.04);
             text-transform: uppercase;
+            transition: border-color 0.8s ease;
         }
 
-        /* ---- 创作历程 (时间线) ---- */
+        .visual-placeholder:hover {
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
         .timeline {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px 80px;
-            margin-top: 10px;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 40px 60px;
+            margin-top: 8px;
         }
 
         .timeline-item {
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            padding-top: 16px;
         }
 
         .timeline-item .step {
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.1em;
-            color: rgba(255, 255, 255, 0.15);
+            font-size: 9px;
+            font-weight: 500;
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.08);
             text-transform: uppercase;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
 
         .timeline-item .desc {
-            font-size: 14px;
+            font-size: 12.5px;
             font-weight: 300;
-            line-height: 1.6;
-            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.35);
         }
 
-        /* ---- 技术标签 ---- */
+        .timeline-item .desc strong {
+            color: rgba(255, 255, 255, 0.55);
+            font-weight: 400;
+        }
+
         .tag-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 6px;
+            gap: 8px;
+            margin-top: 4px;
         }
 
         .tag {
-            font-size: 12px;
+            font-size: 10.5px;
             font-weight: 300;
-            letter-spacing: 0.05em;
-            color: rgba(255, 255, 255, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            padding: 6px 18px;
-            background: rgba(255, 255, 255, 0.02);
+            letter-spacing: 0.06em;
+            color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 5px 18px;
+            background: transparent;
+            transition: all 0.4s ease;
         }
 
-        /* ---- 页脚 ---- */
+        .tag:hover {
+            color: rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .principle-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-top: 8px;
+        }
+
+        .principle-card {
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 28px 32px;
+            background: transparent;
+            transition: border-color 0.6s ease;
+        }
+
+        .principle-card:hover {
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .principle-card .num {
+            font-size: 32px;
+            font-weight: 200;
+            color: rgba(255, 255, 255, 0.04);
+            letter-spacing: -0.03em;
+            margin-bottom: 10px;
+        }
+
+        .principle-card h4 {
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 6px;
+        }
+
+        .principle-card p {
+            font-size: 12px;
+            font-weight: 300;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.15);
+        }
+
         .footer {
-            border-top: 1px solid rgba(255, 255, 255, 0.04);
-            padding-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.02);
+            padding-top: 32px;
             margin-top: 80px;
             display: flex;
             justify-content: space-between;
-            font-size: 12px;
+            font-size: 10px;
             font-weight: 300;
-            color: rgba(255, 255, 255, 0.15);
-            letter-spacing: 0.05em;
+            color: rgba(255, 255, 255, 0.06);
+            letter-spacing: 0.08em;
         }
 
-        /* ---- 返回入口 ---- */
-        .back-link {
-            position: fixed;
-            top: 32px;
-            left: 32px;
-            z-index: 100;
-            font-size: 11px;
-            font-weight: 300;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.15);
-            text-decoration: none;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            padding: 8px 20px;
-            transition: all 0.4s ease;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
+        @media (max-width: 1024px) {
+            .row {
+                gap: 50px 60px;
+            }
+            .principle-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .timeline {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
-        .back-link:hover {
-            color: #fff;
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        /* ===== 响应式 ===== */
         @media (max-width: 768px) {
             .row {
                 grid-template-columns: 1fr;
-                gap: 40px;
+                gap: 32px;
             }
             .row.reverse {
                 direction: ltr;
@@ -303,444 +379,654 @@
             .row.reverse>* {
                 direction: ltr;
             }
-
+            .row.three {
+                grid-template-columns: 1fr;
+            }
             .timeline {
                 grid-template-columns: 1fr;
-                gap: 30px;
+                gap: 24px;
             }
-
+            .principle-grid {
+                grid-template-columns: 1fr;
+            }
             #about-section {
                 padding: 60px 5% 80px;
             }
-
             .about-block {
                 margin-bottom: 80px;
             }
-
+            .title-block {
+                margin-bottom: 56px;
+                padding-bottom: 40px;
+            }
             .entry-link {
                 bottom: 24px;
                 left: 24px;
-                font-size: 11px;
-                padding: 8px 16px;
+                font-size: 10px;
+                padding: 8px 18px;
             }
             .hint {
                 display: none;
             }
+            .watermark {
+                top: 24px;
+                left: 24px;
+                font-size: 8px;
+            }
             .back-link {
-                top: 20px;
-                left: 20px;
-                font-size: 10px;
+                top: 16px;
+                left: 16px;
+                font-size: 9px;
                 padding: 6px 14px;
+            }
+            .principle-card {
+                padding: 20px 24px;
             }
         }
 
         @media (max-width: 480px) {
             .main-title {
-                font-size: 36px;
+                font-size: 32px;
             }
             .col-heading {
-                font-size: 22px;
+                font-size: 20px;
+            }
+            .col-text {
+                font-size: 12.5px;
+                line-height: 1.9;
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- ============================================================
-    页面一：演示页
-    ============================================================ -->
+    <!-- ===== 作品页 ===== -->
     <section id="demo-section">
-        <!-- p5.js 会渲染到这里 -->
-
-        <!-- 左下：进入说明页 -->
-        <a class="entry-link" id="enterAbout">↗ 关于项目</a>
-
-        <!-- 右下：操作提示 -->
-        <div class="hint">移动 · 探索<br />点击 · 涟漪</div>
+        <div class="watermark">光 · 涟漪</div>
+        <button class="entry-link" id="enterAbout">↗ 关于项目</button>
+        <div class="hint">移动 · 光随行<br />涟漪 · 自生发</div>
     </section>
 
-    <!-- ============================================================
-    页面二：说明页
-    ============================================================ -->
-    <section id="about-section" style="display:none;">
+    <!-- ===== 说明页 ===== -->
+    <section id="about-section">
+        <button class="back-link" id="backDemo">← 返回</button>
 
-        <!-- 返回按钮 -->
-        <a class="back-link" id="backDemo">← 返回</a>
-
-        <!-- ===== 标题区 ===== -->
         <div class="title-block">
             <h1 class="main-title">
                 光 · 涟漪<br />
                 <span class="light">触碰的回响</span>
             </h1>
-            <p class="sub-title">光影互动装置 · 2026</p>
+            <p class="sub-title">沉浸式光影互动装置 · 2026</p>
         </div>
 
-        <!-- ===== 概念 ===== -->
         <div class="about-block">
             <div class="row">
                 <div>
                     <div class="col-label">概念</div>
                     <h2 class="col-heading">在黑暗中，<br />光只为你而来。</h2>
                     <p class="col-text">
-                        你走进一个黑暗的空间。头顶的光追随着你，照亮你周围的透明水管。
+                        你走进一个完全黑暗的空间。头顶的光追随着你，照亮你周围的透明水管。
                         每一次触碰，水晃动，光影荡开，风铃轻响。
                         你看不清整个空间，只能一步步往前走，慢慢看见更多。
                     </p>
-                    <p class="col-text" style="margin-top:16px;">
+                    <p class="col-text" style="margin-top:18px;">
                         不预设故事，不解释情绪。
-                        只是提供一个让观者沉浸其中、自我感知的 <strong>「光之丛林」</strong>。
+                        只提供一个让观者沉浸其中、自我感知的 <strong>「光之丛林」</strong>。
                     </p>
                 </div>
                 <div>
-                    <div class="visual-placeholder">▣ 概念影像占位</div>
+                    <div class="visual-placeholder">▣ 概念影像</div>
                 </div>
             </div>
         </div>
 
-        <!-- ===== 创作历程 ===== -->
         <div class="about-block">
-            <div class="col-label" style="margin-bottom:24px;">历程</div>
-            <h2 class="col-heading" style="margin-bottom:40px;">从碎片到方案</h2>
+            <div class="col-label" style="margin-bottom:20px;">核心原则</div>
+            <div class="principle-grid">
+                <div class="principle-card">
+                    <div class="num">01</div>
+                    <h4>简约</h4>
+                    <p>去掉一切叙事标签，只保留最直接的身体与光的对话。</p>
+                </div>
+                <div class="principle-card">
+                    <div class="num">02</div>
+                    <h4>直觉</h4>
+                    <p>走进、触碰、感受。无需学习，无需理解，身体即控制器。</p>
+                </div>
+                <div class="principle-card">
+                    <div class="num">03</div>
+                    <h4>留白</h4>
+                    <p>不说故事，不解释情绪。让每个人在光与影中读出自己的回响。</p>
+                </div>
+            </div>
+        </div>
 
+        <div class="about-block">
+            <div class="col-label" style="margin-bottom:20px;">历程</div>
+            <h2 class="col-heading" style="margin-bottom:36px;">从碎片到方案</h2>
             <div class="timeline">
                 <div class="timeline-item">
                     <div class="step">01 · 初始</div>
-                    <div class="desc">
-                        黑白投影、泡泡、烟、光、丝线、欲望……<br />
-                        从日常感知中收集了 <strong>六个零散片段</strong>。
-                    </div>
+                    <div class="desc">从日常感知中收集了 <strong>六个零散片段</strong></div>
                 </div>
                 <div class="timeline-item">
                     <div class="step">02 · 叙事尝试</div>
-                    <div class="desc">
-                        试图让线条承载「好故事/坏故事」的情绪变奏。<br />
-                        发现 <strong>太复杂</strong>，反而削弱了直觉的力量。
-                    </div>
+                    <div class="desc">试图让线条承载情绪变奏，发现 <strong>太复杂</strong></div>
                 </div>
                 <div class="timeline-item">
                     <div class="step">03 · 精简</div>
-                    <div class="desc">
-                        回归核心：<strong>触碰 = 涟漪</strong>。<br />
-                        去掉叙事标签，只保留身体与光的直接对话。
-                    </div>
+                    <div class="desc">回归核心：<strong>触碰 = 涟漪</strong></div>
                 </div>
                 <div class="timeline-item">
                     <div class="step">04 · 材质探索</div>
-                    <div class="desc">
-                        从细线 → 透明鱼线 → <strong>透明水管 + 水</strong>。<br />
-                        加入风铃般的声音，让触觉、视觉、听觉合一。
-                    </div>
+                    <div class="desc">从细线到 <strong>透明水管 + 水</strong>，加入风铃声音</div>
                 </div>
                 <div class="timeline-item">
                     <div class="step">05 · 光的逻辑</div>
-                    <div class="desc">
-                        全黑空间中，<strong>光只跟随人</strong>。<br />
-                        你走到哪，光就到哪。你看不清全貌，只能探索。
-                    </div>
+                    <div class="desc">全黑空间中，<strong>光只跟随人</strong>，你走到哪光就到哪</div>
                 </div>
                 <div class="timeline-item">
                     <div class="step">06 · 当前</div>
-                    <div class="desc">
-                        沉淀为 <strong>「光 · 涟漪」</strong>。<br />
-                        简约、直接、富有禅意。等待实体落地。
-                    </div>
+                    <div class="desc">沉淀为 <strong>「光 · 涟漪」</strong>，等待实体落地</div>
                 </div>
             </div>
         </div>
 
-        <!-- ===== 技术方向 ===== -->
         <div class="about-block">
-            <div class="col-label" style="margin-bottom:24px;">技术</div>
-            <h2 class="col-heading" style="margin-bottom:8px;">如何实现</h2>
-
-            <div class="row" style="margin-top:24px;">
+            <div class="row">
                 <div>
-                    <p class="col-text" style="margin-bottom:20px;">
-                        装置的核心由以下技术支撑：
-                    </p>
+                    <div class="col-label">技术</div>
+                    <h2 class="col-heading">如何实现</h2>
+                    <p class="col-text" style="margin-bottom:20px;">装置的核心由以下技术方向支撑：</p>
                     <div class="tag-grid">
                         <span class="tag">投影 Mapping</span>
-                        <span class="tag">Kinect 人体追踪</span>
+                        <span class="tag">人体追踪</span>
                         <span class="tag">透明水管 + 水</span>
                         <span class="tag">物理风铃发声</span>
                         <span class="tag">光的折射与散射</span>
                         <span class="tag">实时互动反馈</span>
                     </div>
-                    <p class="col-text" style="margin-top:28px; font-size:13px; color:rgba(255,255,255,0.3);">
-                        光跟随人移动，触碰引发水的晃动与光影涟漪，风铃随碰撞发声。
-                        一切反馈都是 <strong>物理的、有机的、不可完全预测的</strong>。
+                    <p class="col-text" style="margin-top:28px; font-size:12px; color:rgba(255,255,255,0.12);">
+                        光跟随人移动，触碰引发水的晃动与光影涟漪，风铃随碰撞发声。<br />
+                        一切反馈都是 <strong style="color:rgba(255,255,255,0.25);">物理的、有机的、不可完全预测的</strong>。
                     </p>
                 </div>
                 <div>
-                    <div class="visual-placeholder">▣ 技术示意占位</div>
+                    <div class="visual-placeholder">▣ 技术示意</div>
                 </div>
             </div>
         </div>
 
-        <!-- ===== 页脚 ===== -->
         <div class="footer">
             <span>光 · 涟漪 / 触碰的回响</span>
             <span>毕业设计 · 2026</span>
         </div>
-
     </section>
 
 
     <!-- ============================================================
-    p5.js 交互脚本
+    Canvas 交互 — 随机散布节点 · 涟漪传播
     ============================================================ -->
     <script>
         // ============================================================
         //  全局状态
         // ============================================================
         const STATE = {
-            demoActive: true, // 当前是否显示演示页
-            lines: [],
+            nodes: [],
             ripples: [],
             mouseX: -9999,
             mouseY: -9999,
             mouseInside: false,
+            frame: 0,
         };
 
         // ============================================================
-        //  p5.js 主程序
+        //  Canvas 初始化
         // ============================================================
-        function setup() {
-            const canvas = createCanvas(windowWidth, windowHeight);
-            canvas.parent('demo-section');
-            // 让 canvas 作为背景，不遮挡 HTML 元素
-            canvas.style('pointer-events', 'none');
-            // 但我们需要鼠标事件，所以用 window 监听
-            pixelDensity(1);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const demoSection = document.getElementById('demo-section');
+        demoSection.prepend(canvas);
 
-            // 生成垂直线条
-            const spacing = 28;
-            const cols = Math.ceil(width / spacing) + 4;
-            for (let i = 0; i < cols; i++) {
-                const x = (i - 2) * spacing + (spacing / 2);
-                STATE.lines.push({
-                    x: x,
-                    baseX: x,
-                    phase: random(TWO_PI),
-                    speed: 0.008 + random(0.006),
-                    amp: 0,
-                    targetAmp: 0,
-                    height: height * (0.5 + random(0.4)),
-                });
-            }
+        let W, H, dpr = 1;
 
-            // 鼠标事件监听（用 window，因为 canvas 不阻挡）
-            window.addEventListener('mousemove', (e) => {
-                const rect = document.getElementById('demo-section').getBoundingClientRect();
-                STATE.mouseX = e.clientX - rect.left;
-                STATE.mouseY = e.clientY - rect.top;
-                STATE.mouseInside = true;
-            });
+        // ===== 可调参数（自然衰减为主） =====
+        const PARAMS = {
+            nodeCount: 120, // 节点数量（自动根据面积调整）
+            lightRadius: 160, // 鼠标光晕半径
+            nodeTriggerDist: 70, // 鼠标触发节点涟漪的距离
+            rippleSpeedBase: 0.5, // 涟漪基础速度（慢速，自然衰减）
+            rippleDecay: 0.28, // 涟漪传播衰减系数
+            minStrength: 1.2, // 最小传播强度
+            nodeBaseBrightness: 0.02, // 节点基础可见度（极暗）
+            nodeBrightnessFactor: 1.2, // 节点亮度放大系数
+            lineBaseAlpha: 0.015, // 线条基础透明度
+            lineBrightnessFactor: 0.25, // 线条亮度放大系数
+            rippleAlphaBase: 0.18, // 涟漪透明度基数
+        };
 
-            window.addEventListener('mouseleave', () => {
-                STATE.mouseInside = false;
-            });
+        function resize() {
+            const rect = demoSection.getBoundingClientRect();
+            W = rect.width;
+            H = rect.height;
+            dpr = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = W * dpr;
+            canvas.height = H * dpr;
+            canvas.style.width = W + 'px';
+            canvas.style.height = H + 'px';
+            ctx.scale(dpr, dpr);
+            generateNodes();
+        }
 
-            window.addEventListener('click', (e) => {
-                const rect = document.getElementById('demo-section').getBoundingClientRect();
-                const mx = e.clientX - rect.left;
-                const my = e.clientY - rect.top;
-                // 在点击位置产生涟漪
-                STATE.ripples.push({
-                    x: mx,
-                    y: my,
-                    radius: 0,
-                    maxRadius: 180,
-                    life: 1.0,
-                });
-            });
+        // ============================================================
+        //  生成随机散布节点（保证均匀覆盖，不重叠）
+        // ============================================================
+        function generateNodes() {
+            // 计算期望的节点数量（基于面积）
+            const area = W * H;
+            const density = 0.00012; // 每像素节点密度
+            let targetCount = Math.floor(area * density);
+            targetCount = Math.max(80, Math.min(250, targetCount));
 
-            // 处理窗口缩放
-            window.addEventListener('resize', () => {
-                resizeCanvas(windowWidth, windowHeight);
-                // 重新计算线条位置
-                const spacing = 28;
-                const cols = Math.ceil(width / spacing) + 4;
-                STATE.lines = [];
-                for (let i = 0; i < cols; i++) {
-                    const x = (i - 2) * spacing + (spacing / 2);
-                    STATE.lines.push({
+            const nodes = [];
+            const minDist = Math.min(W, H) * 0.045; // 最小间距，避免重叠
+            const maxAttempts = 5000;
+
+            let attempts = 0;
+            const margin = 30;
+
+            while (nodes.length < targetCount && attempts < maxAttempts) {
+                attempts++;
+                const x = margin + Math.random() * (W - 2 * margin);
+                const y = margin + Math.random() * (H - 2 * margin);
+
+                // 检查是否与已有节点太近
+                let tooClose = false;
+                for (let n of nodes) {
+                    const dx = n.x - x;
+                    const dy = n.y - y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < minDist) {
+                        tooClose = true;
+                        break;
+                    }
+                }
+                if (!tooClose) {
+                    nodes.push({
+                        id: nodes.length,
                         x: x,
-                        baseX: x,
-                        phase: random(TWO_PI),
-                        speed: 0.008 + random(0.006),
-                        amp: 0,
-                        targetAmp: 0,
-                        height: height * (0.5 + random(0.4)),
+                        y: y,
+                        brightness: 0,
+                        targetBrightness: 0,
+                        phase: Math.random() * Math.PI * 2,
                     });
                 }
+            }
+
+            STATE.nodes = nodes;
+            console.log(`✦ 生成 ${nodes.length} 个随机散布节点`);
+        }
+
+        window.addEventListener('resize', resize);
+
+        // ============================================================
+        //  鼠标 / 触摸
+        // ============================================================
+        function getPos(e) {
+            const rect = demoSection.getBoundingClientRect();
+            let cx, cy;
+            if (e.touches) {
+                cx = e.touches[0].clientX - rect.left;
+                cy = e.touches[0].clientY - rect.top;
+                e.preventDefault();
+            } else {
+                cx = e.clientX - rect.left;
+                cy = e.clientY - rect.top;
+            }
+            return { x: cx, y: cy };
+        }
+
+        function onMove(e) {
+            const pos = getPos(e);
+            STATE.mouseX = pos.x;
+            STATE.mouseY = pos.y;
+            STATE.mouseInside = true;
+        }
+
+        function onLeave() {
+            STATE.mouseInside = false;
+        }
+
+        function onTap(e) {
+            const pos = getPos(e);
+            // 点击产生高强度涟漪（强度25，传播广）
+            createRipple(pos.x, pos.y, 25, 130 + Math.random() * 50);
+        }
+
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseleave', onLeave);
+        window.addEventListener('click', onTap);
+        window.addEventListener('touchmove', onMove, { passive: false });
+        window.addEventListener('touchstart', onTap, { passive: false });
+        window.addEventListener('touchend', onLeave, { passive: false });
+
+        // ============================================================
+        //  涟漪系统
+        // ============================================================
+
+        function createRipple(x, y, strength, maxRadiusOverride) {
+            const speed = PARAMS.rippleSpeedBase + strength * 0.006;
+            const maxRadius = maxRadiusOverride || (50 + strength * 2.0);
+
+            STATE.ripples.push({
+                x: x,
+                y: y,
+                radius: 0,
+                maxRadius: maxRadius,
+                life: 1.0,
+                speed: speed,
+                strength: strength,
+                triggeredSet: new Set(),
+                isActive: true,
+                phaseOffset: Math.random() * Math.PI * 2,
             });
         }
 
-        function draw() {
-            // ---- 清空 ----
-            background(0);
+        function triggerNodeRipple(node, strength) {
+            const s = strength || 8;
+            const maxR = 35 + s * 1.8;
+            STATE.ripples.push({
+                x: node.x,
+                y: node.y,
+                radius: 0,
+                maxRadius: maxR,
+                life: 1.0,
+                speed: PARAMS.rippleSpeedBase + s * 0.005,
+                strength: s,
+                triggeredSet: new Set([node.id]),
+                isActive: true,
+                phaseOffset: Math.random() * Math.PI * 2,
+                isSecondary: true,
+            });
+        }
 
-            // ---- 更新线条晃动 ----
-            const lightRadius = 160; // 光照半径
-            const mouseX = STATE.mouseX;
-            const mouseY = STATE.mouseY;
-            const inside = STATE.mouseInside;
+        // ============================================================
+        //  更新涟漪（含传播链）
+        // ============================================================
+        function updateRipples() {
+            const toRemove = [];
 
-            for (let line of STATE.lines) {
-                // 计算到鼠标的距离
-                const dx = mouseX - line.x;
-                const dy = mouseY - (height / 2);
-                const dist = sqrt(dx * dx + dy * dy);
+            for (let i = 0; i < STATE.ripples.length; i++) {
+                const ripple = STATE.ripples[i];
+                if (!ripple.isActive) continue;
 
-                // 是否在光照范围内
-                const lit = inside && dist < lightRadius;
+                ripple.radius += ripple.speed;
+                ripple.life -= 0.005; // 自然衰减
 
-                // 目标振幅：光照范围内晃动，范围外静止
-                const targetAmp = lit ? 12 * (1 - dist / lightRadius) : 0;
-                line.targetAmp = targetAmp;
-
-                // 平滑过渡
-                line.amp += (line.targetAmp - line.amp) * 0.04;
-
-                // 更新相位
-                line.phase += line.speed;
-
-                // 计算偏移
-                const offset = sin(line.phase) * line.amp;
-                const currentX = line.baseX + offset;
-
-                // ---- 计算亮度 ----
-                let brightness = 0;
-                if (inside && dist < lightRadius) {
-                    brightness = 1 - (dist / lightRadius);
-                    brightness = pow(brightness, 0.7);
+                if (ripple.life <= 0 || ripple.radius > ripple.maxRadius) {
+                    ripple.isActive = false;
+                    toRemove.push(i);
+                    continue;
                 }
 
-                // ---- 绘制线条 ----
-                const alpha = brightness * 0.9 + 0.05;
-                const strokeW = 1.2 + brightness * 2.0;
+                // ---- 涟漪传播（强度衰减） ----
+                if (ripple.strength < PARAMS.minStrength) continue;
+                const newStrength = ripple.strength * PARAMS.rippleDecay;
+                if (newStrength < PARAMS.minStrength) continue;
 
-                // 发光效果：多层绘制
-                // 外层光晕
-                if (brightness > 0.05) {
-                    noStroke();
-                    const glowAlpha = brightness * 0.06;
-                    fill(255, 255, 255, glowAlpha);
-                    const glowSize = 20 + brightness * 30;
-                    ellipse(currentX, height / 2, glowSize, line.height * 0.9);
-                }
+                for (let node of STATE.nodes) {
+                    if (ripple.triggeredSet.has(node.id)) continue;
 
-                // 主线
-                stroke(255, 255, 255, alpha * 200);
-                strokeWeight(strokeW);
-                const topY = height / 2 - line.height / 2;
-                const bottomY = height / 2 + line.height / 2;
-                line(currentX, topY, currentX, bottomY);
+                    const dx = node.x - ripple.x;
+                    const dy = node.y - ripple.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
 
-                // 细的二次线 （增加层次）
-                if (brightness > 0.2) {
-                    stroke(255, 255, 255, brightness * 0.08 * 100);
-                    strokeWeight(0.5);
-                    const offset2 = sin(line.phase * 1.3 + 1.2) * line.amp * 0.3;
-                    line(currentX + offset2, topY + 10, currentX + offset2, bottomY - 10);
-                }
-
-                // ---- 线条上的光点（水珠感） ----
-                if (brightness > 0.3) {
-                    const dotCount = floor(3 + brightness * 6);
-                    for (let i = 0; i < dotCount; i++) {
-                        const t = (i + 0.5) / dotCount;
-                        const yPos = topY + t * line.height;
-                        const waveOffset = sin(line.phase * 1.7 + t * 6) * 3 * brightness;
-                        const dotSize = 1.5 + brightness * 2.5;
-                        const dotAlpha = (0.3 + 0.7 * (1 - abs(t - 0.5) * 2)) * brightness;
-                        noStroke();
-                        fill(255, 255, 255, dotAlpha * 0.6 * 200);
-                        ellipse(currentX + waveOffset, yPos, dotSize, dotSize * 0.6);
+                    // 节点在涟漪半径内触发
+                    if (dist < ripple.radius + 3) {
+                        ripple.triggeredSet.add(node.id);
+                        triggerNodeRipple(node, newStrength);
                     }
                 }
             }
 
-            // ---- 绘制光照光圈 ----
-            if (inside && mouseX > 0 && mouseY > 0) {
-                // 主光圈
-                noStroke();
-                const grad = drawingContext.createRadialGradient(
-                    mouseX, mouseY, 0,
-                    mouseX, mouseY, lightRadius
-                );
-                grad.addColorStop(0, 'rgba(255,255,255,0.04)');
-                grad.addColorStop(0.5, 'rgba(255,255,255,0.015)');
-                grad.addColorStop(1, 'rgba(255,255,255,0)');
-                drawingContext.fillStyle = grad;
-                drawingContext.beginPath();
-                drawingContext.arc(mouseX, mouseY, lightRadius, 0, TWO_PI);
-                drawingContext.fill();
-
-                // 内圈细线
-                noFill();
-                stroke(255, 255, 255, 12);
-                strokeWeight(0.5);
-                const pulse = 1 + sin(frameCount * 0.015) * 0.02;
-                ellipse(mouseX, mouseY, lightRadius * 0.3 * pulse, lightRadius * 0.3 * pulse);
-
-                // 十字准星（极淡）
-                const crossSize = 6;
-                stroke(255, 255, 255, 20);
-                strokeWeight(0.5);
-                line(mouseX - crossSize, mouseY, mouseX + crossSize, mouseY);
-                line(mouseX, mouseY - crossSize, mouseX, mouseY + crossSize);
+            for (let i = toRemove.length - 1; i >= 0; i--) {
+                STATE.ripples.splice(toRemove[i], 1);
             }
-
-            // ---- 绘制涟漪 ----
-            for (let i = STATE.ripples.length - 1; i >= 0; i--) {
-                const r = STATE.ripples[i];
-                r.radius += 1.8;
-                r.life -= 0.008;
-
-                if (r.life <= 0 || r.radius > r.maxRadius) {
-                    STATE.ripples.splice(i, 1);
-                    continue;
-                }
-
-                const alpha = r.life * 0.3;
-                noFill();
-                stroke(255, 255, 255, alpha * 180);
-                strokeWeight(0.6 + (1 - r.life) * 1.2);
-                const waveCount = 2 + floor((1 - r.life) * 4);
-                for (let w = 0; w < waveCount; w++) {
-                    const offset = w * 6 * (1 - r.life * 0.5);
-                    const rad = r.radius + offset;
-                    const a = alpha * (1 - w / waveCount);
-                    stroke(255, 255, 255, a * 180);
-                    ellipse(r.x, r.y, rad * 2, rad * 2);
-                }
-
-                // 涟漪中心光点
-                if (r.life > 0.5) {
-                    noStroke();
-                    const centerAlpha = (r.life - 0.5) * 2 * 0.2;
-                    fill(255, 255, 255, centerAlpha * 200);
-                    ellipse(r.x, r.y, 4, 4);
-                }
-            }
-
-            // ---- 角落文字标识（极小） ----
-            noStroke();
-            fill(255, 255, 255, 8);
-            textFont('Inter');
-            textSize(9);
-            textStyle(NORMAL);
-            textAlign(LEFT, BOTTOM);
-            text('光 · 涟漪', 20, height - 20);
         }
 
         // ============================================================
-        //  页面切换逻辑
+        //  渲染循环
         // ============================================================
-        const demoSection = document.getElementById('demo-section');
+        function draw() {
+            STATE.frame++;
+            ctx.clearRect(0, 0, W, H);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, W, H);
+
+            const mx = STATE.mouseX;
+            const my = STATE.mouseY;
+            const inside = STATE.mouseInside;
+
+            // ---- 更新节点亮度（自然衰减） ----
+            for (let node of STATE.nodes) {
+                const dx = mx - node.x;
+                const dy = my - node.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                let target = 0;
+                if (inside && dist < PARAMS.lightRadius) {
+                    // 衰减曲线：先快后慢，模拟光晕自然衰减
+                    const t = dist / PARAMS.lightRadius;
+                    target = 1 - t * t; // 二次衰减
+                    target = Math.max(0, target) * PARAMS.nodeBrightnessFactor;
+                }
+                node.targetBrightness = Math.min(target, 0.9);
+                node.brightness += (node.targetBrightness - node.brightness) * 0.05;
+                node.phase += 0.003;
+            }
+
+            // ---- 更新涟漪（含传播） ----
+            updateRipples();
+
+            // ---- 1. 绘制连接线（节点之间的自然连接，模拟光网） ----
+            // 为了提高性能，只绘制相邻节点之间的连线（基于距离）
+            const connectDist = Math.min(W, H) * 0.12;
+            for (let i = 0; i < STATE.nodes.length; i++) {
+                const n1 = STATE.nodes[i];
+                if (n1.brightness < 0.02) continue;
+                for (let j = i + 1; j < STATE.nodes.length; j++) {
+                    const n2 = STATE.nodes[j];
+                    const dx = n1.x - n2.x;
+                    const dy = n1.y - n2.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < connectDist && dist > 5) {
+                        const avgBright = (n1.brightness + n2.brightness) * 0.5;
+                        const alpha = PARAMS.lineBaseAlpha + avgBright * PARAMS.lineBrightnessFactor;
+                        if (alpha > 0.005) {
+                            ctx.beginPath();
+                            ctx.moveTo(n1.x, n1.y);
+                            ctx.lineTo(n2.x, n2.y);
+                            ctx.strokeStyle = `rgba(255,255,255,${Math.min(alpha, 0.25)})`;
+                            ctx.lineWidth = 0.3 + avgBright * 0.5;
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            // ---- 2. 绘制涟漪（先画涟漪，再画节点和鼠标） ----
+            for (let ripple of STATE.ripples) {
+                if (!ripple.isActive) continue;
+                const life = ripple.life;
+                const r = ripple.radius;
+                const strength = ripple.strength;
+                const baseBright = Math.min(1, strength / 12) * 1.2;
+                const alpha = life * baseBright * PARAMS.rippleAlphaBase;
+
+                if (alpha < 0.001) continue;
+
+                const layers = Math.min(4, 2 + Math.floor(strength / 5));
+                for (let layer = 0; layer < layers; layer++) {
+                    const offset = layer * 3 * (1 - life * 0.2);
+                    const rad = r + offset;
+                    const layerAlpha = alpha * (1 - layer / layers);
+                    if (layerAlpha < 0.001 || rad > ripple.maxRadius + 15) continue;
+
+                    ctx.beginPath();
+                    ctx.arc(ripple.x, ripple.y, rad, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(255,255,255,${Math.min(layerAlpha, 0.15)})`;
+                    ctx.lineWidth = 0.2 + (1 - life) * 0.6 + strength * 0.015;
+                    ctx.stroke();
+                }
+
+                // 中心微光
+                if (life > 0.3) {
+                    const centerAlpha = life * Math.min(1, strength / 20) * 0.1;
+                    ctx.beginPath();
+                    ctx.arc(ripple.x, ripple.y, 1 + (1 - life) * 2.5 + strength * 0.03, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255,255,255,${Math.min(centerAlpha, 0.15)})`;
+                    ctx.fill();
+                }
+            }
+
+            // ---- 3. 绘制节点 ----
+            for (let node of STATE.nodes) {
+                const b = node.brightness;
+
+                // 基础可见度（极暗）
+                const baseVis = PARAMS.nodeBaseBrightness;
+                const finalBright = Math.max(baseVis, b);
+
+                const size = 0.6 + finalBright * 3.0;
+                const alpha = Math.min(finalBright * 0.6, 0.5);
+
+                // 光晕（柔和）
+                if (finalBright > 0.05) {
+                    const glowR = 4 + finalBright * 20;
+                    const grad = ctx.createRadialGradient(
+                        node.x, node.y, 0,
+                        node.x, node.y, glowR
+                    );
+                    grad.addColorStop(0, `rgba(255,255,255,${finalBright * 0.04})`);
+                    grad.addColorStop(1, `rgba(255,255,255,0)`);
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, glowR, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // 节点核心
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+                ctx.fill();
+
+                // 高光点（增加立体感）
+                if (finalBright > 0.2) {
+                    ctx.beginPath();
+                    ctx.arc(node.x - size * 0.2, node.y - size * 0.2, size * 0.25, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255,255,255,${finalBright * 0.1})`;
+                    ctx.fill();
+                }
+            }
+
+            // ---- 4. 鼠标触发节点涟漪 ----
+            if (inside) {
+                for (let node of STATE.nodes) {
+                    const dx = mx - node.x;
+                    const dy = my - node.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < PARAMS.nodeTriggerDist && node.brightness > 0.1) {
+                        let hasRecent = false;
+                        for (let r of STATE.ripples) {
+                            const d2 = Math.sqrt((r.x - node.x) ** 2 + (r.y - node.y) ** 2);
+                            if (d2 < 8 && r.life > 0.6) { hasRecent = true; break; }
+                        }
+                        if (!hasRecent) {
+                            triggerNodeRipple(node, 8);
+                        }
+                    }
+                }
+            }
+
+            // ---- 5. 鼠标发光圈（自然衰减光晕） ----
+            if (inside && mx > 0 && mx < W && my > 0 && my < H) {
+                const mainR = PARAMS.lightRadius;
+
+                // 主光晕（大面积，柔和）
+                const grad = ctx.createRadialGradient(mx, my, 0, mx, my, mainR);
+                grad.addColorStop(0, 'rgba(255,255,255,0.07)');
+                grad.addColorStop(0.3, 'rgba(255,255,255,0.035)');
+                grad.addColorStop(0.7, 'rgba(255,255,255,0.015)');
+                grad.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(mx, my, mainR, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 中圈（中等亮度）
+                const midR = 45;
+                const grad2 = ctx.createRadialGradient(mx, my, 0, mx, my, midR);
+                grad2.addColorStop(0, 'rgba(255,255,255,0.05)');
+                grad2.addColorStop(0.6, 'rgba(255,255,255,0.02)');
+                grad2.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = grad2;
+                ctx.beginPath();
+                ctx.arc(mx, my, midR, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 核心亮点
+                const pulse = 1 + Math.sin(STATE.frame * 0.02) * 0.06;
+                ctx.beginPath();
+                ctx.arc(mx, my, 2 * pulse, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,255,255,0.18)';
+                ctx.fill();
+
+                // 内圈微光
+                const innerR = 12 * pulse;
+                const grad3 = ctx.createRadialGradient(mx, my, 0, mx, my, innerR);
+                grad3.addColorStop(0, 'rgba(255,255,255,0.08)');
+                grad3.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = grad3;
+                ctx.beginPath();
+                ctx.arc(mx, my, innerR, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 极细十字准星（几乎不可见，增加质感）
+                const cross = 10;
+                ctx.strokeStyle = 'rgba(255,255,255,0.025)';
+                ctx.lineWidth = 0.3;
+                ctx.beginPath();
+                ctx.moveTo(mx - cross, my);
+                ctx.lineTo(mx + cross, my);
+                ctx.moveTo(mx, my - cross);
+                ctx.lineTo(mx, my + cross);
+                ctx.stroke();
+
+                // 外圈呼吸环
+                const breatheR = 50 + Math.sin(STATE.frame * 0.015) * 4;
+                ctx.beginPath();
+                ctx.arc(mx, my, breatheR, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255,255,255,0.02)';
+                ctx.lineWidth = 0.3;
+                ctx.stroke();
+            }
+
+            // ---- 6. 角落信息（极淡） ----
+            const rippleCount = STATE.ripples.filter(r => r.isActive).length;
+            ctx.fillStyle = 'rgba(255,255,255,0.01)';
+            ctx.font = '8px Inter, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(`涟漪 ${rippleCount} · 节点 ${STATE.nodes.length}`, W - 44, H - 20);
+
+            requestAnimationFrame(draw);
+        }
+
+        // ============================================================
+        //  页面切换
+        // ============================================================
         const aboutSection = document.getElementById('about-section');
         const enterBtn = document.getElementById('enterAbout');
         const backBtn = document.getElementById('backDemo');
@@ -749,46 +1035,30 @@
             demoSection.style.display = 'block';
             aboutSection.style.display = 'none';
             document.body.style.overflow = 'hidden';
-            STATE.demoActive = true;
-            // 重新激活 p5 循环
-            loop();
         }
 
         function showAbout() {
             demoSection.style.display = 'none';
             aboutSection.style.display = 'block';
             document.body.style.overflow = 'auto';
-            STATE.demoActive = false;
-            // 暂停 p5 循环以节省性能
-            noLoop();
         }
 
         enterBtn.addEventListener('click', showAbout);
         backBtn.addEventListener('click', showDemo);
-
-        // 键盘 ESC 返回
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !STATE.demoActive) {
-                showDemo();
-            }
+            if (e.key === 'Escape' && aboutSection.style.display === 'block') showDemo();
         });
 
-        // 初始化：显示演示页
+        // ============================================================
+        //  启动
+        // ============================================================
+        resize();
         showDemo();
+        draw();
 
-        // 窗口变化时确保 canvas 尺寸正确
-        function windowResized() {
-            resizeCanvas(windowWidth, windowHeight);
-        }
-
-        // 小技巧：p5 的 mouseX/mouseY 可能不准，我们用自己的
-        // 但为了让 p5 不报错，覆盖一下
-        window.mouseX = 0;
-        window.mouseY = 0;
-
-        console.log('🌊 光 · 涟漪 — 触碰的回响');
-        console.log('移动鼠标探索 · 点击产生涟漪');
+        console.log('✦ 光 · 涟漪 — 触碰的回响');
+        console.log('✦ 随机散布节点 · 自然衰减光晕');
+        console.log(`✦ 节点数: ${STATE.nodes.length} · 涟漪速度: ${PARAMS.rippleSpeedBase}`);
     </script>
-
 </body>
 </html>
