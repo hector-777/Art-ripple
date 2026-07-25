@@ -7,7 +7,6 @@
 
     <!-- Google Fonts: 手写花体 -->
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet" />
-    <!-- 备用字体 Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200;14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
 
     <style>
@@ -132,6 +131,11 @@
             bellTimer: null,
             autoRippleTimer: null,
             isMobile: false,
+            // 鼠标速度跟踪（用于涟漪椭圆方向）
+            mouseVX: 0,
+            mouseVY: 0,
+            prevMouseX: -9999,
+            prevMouseY: -9999,
         };
 
         // ============================================================
@@ -153,7 +157,7 @@
         }
 
         // ============================================================
-        //  参数
+        //  参数（已调整）
         // ============================================================
         const PARAMS = {
             nodeCountDesktop: 150,
@@ -161,7 +165,7 @@
 
             lightRadius: 170,
             nodeTriggerDist: 75,
-            rippleSpeedBase: 0.45,
+            rippleSpeedBase: 0.38, // 稍微减慢涟漪扩散速度
             rippleDecay: 0.27,
             minStrength: 1.0,
             nodeBaseBrightness: 0.012,
@@ -170,19 +174,20 @@
             lineBrightnessFactor: 0.18,
 
             rippleAlphaBase: 0.24,
-            rippleCooldown: 500, // 毫秒，节点涟漪冷却时间
+            rippleCooldown: 500,
 
-            // 波浪参数增强
-            waveDistortion: 1.2, // 增大扭曲幅度
-            waveFrequency: 3.5, // 提高频率，产生更多波浪细节
+            // 波浪参数
+            waveDistortion: 1.4,
+            waveFrequency: 4.0,
 
             floatAmplitude: 0.8,
             floatSpeed: 0.004,
 
+            // 鼠标推开：幅度减少，回弹更慢
             pushRadius: 100,
-            pushStrength: 10,
-            springConstant: 0.025,
-            damping: 0.96,
+            pushStrength: 6, // 从 18 → 6
+            springConstant: 0.012, // 从 0.025 → 0.012（更慢）
+            damping: 0.985, // 从 0.96 → 0.985（阻力更大）
 
             autoRippleIntervalMin: 10000,
             autoRippleIntervalMax: 15000,
@@ -192,8 +197,8 @@
             mouseCoreGlow: 0.25,
             mouseInnerGlow: 0.10,
 
-            // ===== 标题参数（手写花体 Great Vibes） =====
-            titleText: 'RIPPLE',
+            // ===== 标题参数（首字母大写） =====
+            titleText: 'Ripple',
             titleSize: 0.075,
             titleY: 0.18,
             titleLetterSpacing: 0.06,
@@ -204,6 +209,9 @@
             textLayerAlpha: 0.55,
             textLayerGlow: 8,
             textLayerGlowAlpha: 0.08,
+
+            // 涟漪椭圆拉伸强度
+            rippleStretchStrength: 0.6,
         };
 
         // ============================================================
@@ -265,7 +273,6 @@
                             vx: 0,
                             vy: 0,
                             baseBrightness: brightBase,
-                            // 涟漪冷却时间戳
                             lastRippleTime: 0,
                         });
                         idx++;
@@ -279,7 +286,7 @@
         }
 
         // ============================================================
-        //  绘制手写花体标题（Great Vibes + 透明质感）
+        //  绘制手写花体标题
         // ============================================================
         function drawTitle() {
             const text = PARAMS.titleText;
@@ -291,11 +298,10 @@
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            // 使用 Great Vibes 手写花体 + 备用字体
             const fontFamily = '"Great Vibes", "Alex Brush", "Tangerine", "Georgia", serif';
             ctx.font = `${fontSize}px ${fontFamily}`;
 
-            // ---- 底层光晕 ----
+            // 底层光晕
             ctx.save();
             ctx.shadowColor = `rgba(220,225,235,${PARAMS.glowLayerAlpha * 0.3})`;
             ctx.shadowBlur = PARAMS.glowLayerBlur * 1.5;
@@ -320,7 +326,7 @@
             ctx.fillText(text, cx, cy + 2);
             ctx.restore();
 
-            // ---- 字母独立光晕圈 ----
+            // 字母独立光晕圈
             for (let i = 0; i < text.length; i++) {
                 const char = text[i];
                 const charOffset = (i - (text.length - 1) / 2) * fontSize * (0.75 + PARAMS.titleLetterSpacing);
@@ -344,7 +350,7 @@
                 }
             }
 
-            // ---- 上层：手写花体字（透明质感） ----
+            // 上层：手写花体字（透明质感）
             ctx.save();
             ctx.shadowColor = `rgba(220,225,235,${PARAMS.textLayerGlowAlpha})`;
             ctx.shadowBlur = PARAMS.textLayerGlow;
@@ -375,7 +381,7 @@
             ctx.fillText(text, cx - 1, cy);
             ctx.restore();
 
-            // ---- 装饰元素 ----
+            // 装饰
             for (let i = 0; i < text.length - 1; i++) {
                 const charOffset1 = (i - (text.length - 1) / 2) * fontSize * (0.75 + PARAMS.titleLetterSpacing);
                 const charOffset2 = (i + 1 - (text.length - 1) / 2) * fontSize * (0.75 + PARAMS.titleLetterSpacing);
@@ -494,11 +500,21 @@
         }
 
         // ============================================================
-        //  涟漪系统（带冷却 + 增强波浪）
+        //  涟漪系统
         // ============================================================
-        function createRipple(x, y, strength, maxRadiusOverride) {
+        function createRipple(x, y, strength, maxRadiusOverride, vx, vy) {
             const speed = PARAMS.rippleSpeedBase + strength * 0.006 + (Math.random() - 0.5) * 0.08;
             const maxRadius = maxRadiusOverride || (45 + strength * 2.0 + Math.random() * 20);
+
+            // 计算椭圆拉伸方向（基于鼠标速度）
+            const speedVal = Math.sqrt(vx * vx + vy * vy);
+            let stretchAngle = 0,
+                stretchAmount = 0;
+            if (speedVal > 0.3) {
+                stretchAngle = Math.atan2(vy, vx);
+                stretchAmount = Math.min(speedVal * 0.08, 0.5) * PARAMS.rippleStretchStrength;
+            }
+
             STATE.ripples.push({
                 x,
                 y,
@@ -511,15 +527,16 @@
                 isActive: true,
                 phaseOffset: Math.random() * Math.PI * 2,
                 distortionSeed: Math.random() * 100,
-                distortionAmp: 0.4 + Math.random() * 0.8, // 更大的随机幅度
+                distortionAmp: 0.4 + Math.random() * 0.8,
                 randomAngle: Math.random() * Math.PI * 2,
-                // 每层涟漪独立的波动参数
                 wavePhase: Math.random() * Math.PI * 2,
+                // 椭圆拉伸参数
+                stretchAngle: stretchAngle,
+                stretchAmount: stretchAmount,
             });
         }
 
-        function triggerNodeRipple(node, strength) {
-            // 冷却检查：0.5 秒内只触发一次
+        function triggerNodeRipple(node, strength, vx, vy) {
             const now = performance.now();
             if (node.lastRippleTime && (now - node.lastRippleTime) < PARAMS.rippleCooldown) {
                 return;
@@ -528,6 +545,16 @@
 
             const s = strength * (0.7 + Math.random() * 0.6);
             const maxR = 30 + s * 1.8 + Math.random() * 15;
+
+            // 计算椭圆拉伸方向
+            const speedVal = Math.sqrt(vx * vx + vy * vy);
+            let stretchAngle = 0,
+                stretchAmount = 0;
+            if (speedVal > 0.3) {
+                stretchAngle = Math.atan2(vy, vx);
+                stretchAmount = Math.min(speedVal * 0.08, 0.5) * PARAMS.rippleStretchStrength;
+            }
+
             STATE.ripples.push({
                 x: node.x,
                 y: node.y,
@@ -544,6 +571,8 @@
                 randomAngle: Math.random() * Math.PI * 2,
                 isSecondary: true,
                 wavePhase: Math.random() * Math.PI * 2,
+                stretchAngle: stretchAngle,
+                stretchAmount: stretchAmount,
             });
         }
 
@@ -570,8 +599,11 @@
                     const threshold = ripple.radius + 2 + (Math.random() - 0.5) * 4;
                     if (dist < threshold) {
                         ripple.triggeredSet.add(node.id);
+                        // 次级涟漪继承父级的方向
                         setTimeout(() => {
-                            triggerNodeRipple(node, newStrength);
+                            triggerNodeRipple(node, newStrength, ripple.stretchAngle ? Math.cos(ripple
+                                .stretchAngle) * 1 : 0, ripple.stretchAngle ? Math.sin(ripple
+                                .stretchAngle) * 1 : 0);
                         }, Math.random() * 80);
                     }
                 }
@@ -605,11 +637,14 @@
                 }, 300);
 
                 const strength = 8 + Math.random() * 6;
-                // 自动涟漪也要遵循冷却
                 const now = performance.now();
                 if (!node.lastRippleTime || (now - node.lastRippleTime) >= PARAMS.rippleCooldown) {
                     node.lastRippleTime = now;
-                    createRipple(node.x, node.y, strength);
+                    // 自动涟漪没有特定方向，随机方向
+                    const angle = Math.random() * Math.PI * 2;
+                    const randomVx = Math.cos(angle) * 0.5;
+                    const randomVy = Math.sin(angle) * 0.5;
+                    createRipple(node.x, node.y, strength, undefined, randomVx, randomVy);
                     playBell();
                 }
             }
@@ -634,19 +669,40 @@
 
         function onMove(e) {
             const pos = getPos(e);
-            STATE.mouseX = pos.x;
-            STATE.mouseY = pos.y;
+            const newX = pos.x;
+            const newY = pos.y;
+
+            // 计算鼠标速度（带平滑）
+            if (STATE.prevMouseX !== -9999) {
+                const dt = 1;
+                const rawVx = (newX - STATE.prevMouseX) / dt;
+                const rawVy = (newY - STATE.prevMouseY) / dt;
+                // 平滑速度
+                STATE.mouseVX = STATE.mouseVX * 0.6 + rawVx * 0.4;
+                STATE.mouseVY = STATE.mouseVY * 0.6 + rawVy * 0.4;
+            }
+
+            STATE.prevMouseX = newX;
+            STATE.prevMouseY = newY;
+            STATE.mouseX = newX;
+            STATE.mouseY = newY;
             STATE.mouseInside = true;
             if (!STATE.audioCtx) initAudio();
         }
 
-        function onLeave() { STATE.mouseInside = false; }
+        function onLeave() {
+            STATE.mouseInside = false;
+            STATE.mouseVX = 0;
+            STATE.mouseVY = 0;
+        }
 
         function onTap(e) {
             const pos = getPos(e);
             const strength = 20 + Math.random() * 10;
             const maxR = 100 + Math.random() * 60;
-            createRipple(pos.x, pos.y, strength, maxR);
+            // 点击涟漪无特定方向，随机小幅度
+            const angle = Math.random() * Math.PI * 2;
+            createRipple(pos.x, pos.y, strength, maxR, Math.cos(angle) * 0.3, Math.sin(angle) * 0.3);
             playBell();
         }
 
@@ -680,6 +736,81 @@
         }
 
         window.addEventListener('resize', resize);
+
+        // ============================================================
+        //  绘制涟漪（带椭圆拉伸）
+        // ============================================================
+        function drawRipples() {
+            for (let ripple of STATE.ripples) {
+                if (!ripple.isActive) continue;
+                const life = ripple.life;
+                const r = ripple.radius;
+                const strength = ripple.strength;
+                const baseBright = Math.min(1, strength / 12) * 1.4;
+                const alpha = life * baseBright * PARAMS.rippleAlphaBase;
+                if (alpha < 0.001) continue;
+
+                // 椭圆拉伸参数
+                const stretchAngle = ripple.stretchAngle || 0;
+                const stretchAmount = ripple.stretchAmount || 0;
+                const scaleX = 1 + stretchAmount * Math.cos(stretchAngle);
+                const scaleY = 1 + stretchAmount * Math.sin(stretchAngle);
+
+                const layers = Math.min(5, 3 + Math.floor(strength / 4));
+                for (let layer = 0; layer < layers; layer++) {
+                    const offset = layer * 3 * (1 - life * 0.2);
+                    const rad = r + offset;
+                    if (rad > ripple.maxRadius + 20) continue;
+                    const segments = 50 + Math.floor(rad * 0.4);
+                    const layerWave = ripple.wavePhase + layer * 0.8 + life * 0.5;
+                    const distortion = PARAMS.waveDistortion * ripple.distortionAmp *
+                        (0.4 + 0.6 * Math.sin(life * 2 + layer * 0.3)) *
+                        (1 + 0.3 * Math.sin(rad * 0.05));
+
+                    ctx.beginPath();
+                    for (let k = 0; k <= segments; k++) {
+                        const angle = (k / segments) * Math.PI * 2;
+                        // 多频率波浪叠加
+                        const wave1 = Math.sin(angle * PARAMS.waveFrequency + STATE.frame * 0.015 + ripple.distortionSeed +
+                            layerWave) * distortion * 1.8;
+                        const wave2 = Math.cos(angle * 2.3 + STATE.frame * 0.01 + ripple.distortionSeed * 0.7 + layerWave *
+                            0.5) * distortion * 1.2;
+                        const wave3 = Math.sin(angle * 4.7 + STATE.frame * 0.008 + ripple.distortionSeed * 1.3 + layerWave *
+                            0.3) * distortion * 0.7;
+                        const wave4 = Math.cos(angle * 1.1 + STATE.frame * 0.012 + ripple.distortionSeed * 0.4 + layerWave *
+                            0.7) * distortion * 0.5;
+                        const offsetR = (wave1 + wave2 + wave3 + wave4) * 0.2;
+                        const finalR = Math.max(0, rad + offsetR);
+
+                        // 应用椭圆拉伸
+                        const stretchedX = finalR * Math.cos(angle) * (1 + stretchAmount * 0.5 * Math.cos(stretchAngle));
+                        const stretchedY = finalR * Math.sin(angle) * (1 + stretchAmount * 0.5 * Math.sin(stretchAngle));
+                        const px = ripple.x + stretchedX;
+                        const py = ripple.y + stretchedY;
+
+                        if (k === 0) ctx.moveTo(px, py);
+                        else ctx.lineTo(px, py);
+                    }
+                    ctx.closePath();
+                    const layerAlpha = alpha * (1 - layer / layers) * (0.6 + 0.4 * Math.sin(life * 2.5 + layer));
+                    ctx.strokeStyle = `rgba(220,225,235,${Math.min(layerAlpha, 0.18)})`;
+                    ctx.lineWidth = 0.2 + (1 - life) * 0.5 + strength * 0.012;
+                    ctx.stroke();
+                }
+
+                // 中心光点
+                if (life > 0.3) {
+                    const centerAlpha = life * Math.min(1, strength / 20) * 0.10;
+                    const cSize = 1.5 + (1 - life) * 3 + strength * 0.04;
+                    const shiftX = Math.sin(STATE.frame * 0.02 + ripple.distortionSeed) * 0.5;
+                    const shiftY = Math.cos(STATE.frame * 0.018 + ripple.distortionSeed * 0.7) * 0.5;
+                    ctx.beginPath();
+                    ctx.arc(ripple.x + shiftX, ripple.y + shiftY, cSize, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(220,225,235,${Math.min(centerAlpha, 0.15)})`;
+                    ctx.fill();
+                }
+            }
+        }
 
         // ============================================================
         //  渲染循环
@@ -779,66 +910,8 @@
                 }
             }
 
-            // ---- 绘制涟漪（增强波浪感） ----
-            for (let ripple of STATE.ripples) {
-                if (!ripple.isActive) continue;
-                const life = ripple.life;
-                const r = ripple.radius;
-                const strength = ripple.strength;
-                const baseBright = Math.min(1, strength / 12) * 1.4;
-                const alpha = life * baseBright * PARAMS.rippleAlphaBase;
-                if (alpha < 0.001) continue;
-
-                const layers = Math.min(5, 3 + Math.floor(strength / 4)); // 增加层数
-                for (let layer = 0; layer < layers; layer++) {
-                    const offset = layer * 3 * (1 - life * 0.2);
-                    const rad = r + offset;
-                    if (rad > ripple.maxRadius + 20) continue;
-                    const segments = 50 + Math.floor(rad * 0.4);
-                    // 每一层的扭曲参数都不同，制造更丰富的波浪
-                    const layerWave = ripple.wavePhase + layer * 0.8 + life * 0.5;
-                    const distortion = PARAMS.waveDistortion * ripple.distortionAmp *
-                        (0.4 + 0.6 * Math.sin(life * 2 + layer * 0.3)) *
-                        (1 + 0.3 * Math.sin(rad * 0.05));
-
-                    ctx.beginPath();
-                    for (let k = 0; k <= segments; k++) {
-                        const angle = (k / segments) * Math.PI * 2;
-                        // 多频率波浪叠加，产生不规则的类圆形
-                        const wave1 = Math.sin(angle * PARAMS.waveFrequency + STATE.frame * 0.015 + ripple.distortionSeed +
-                            layerWave) * distortion * 1.8;
-                        const wave2 = Math.cos(angle * 2.3 + STATE.frame * 0.01 + ripple.distortionSeed * 0.7 + layerWave *
-                            0.5) * distortion * 1.2;
-                        const wave3 = Math.sin(angle * 4.7 + STATE.frame * 0.008 + ripple.distortionSeed * 1.3 + layerWave *
-                            0.3) * distortion * 0.7;
-                        const wave4 = Math.cos(angle * 1.1 + STATE.frame * 0.012 + ripple.distortionSeed * 0.4 + layerWave *
-                            0.7) * distortion * 0.5;
-                        const offsetR = (wave1 + wave2 + wave3 + wave4) * 0.2;
-                        const finalR = Math.max(0, rad + offsetR);
-                        const px = ripple.x + finalR * Math.cos(angle);
-                        const py = ripple.y + finalR * Math.sin(angle);
-                        if (k === 0) ctx.moveTo(px, py);
-                        else ctx.lineTo(px, py);
-                    }
-                    ctx.closePath();
-                    const layerAlpha = alpha * (1 - layer / layers) * (0.6 + 0.4 * Math.sin(life * 2.5 + layer));
-                    ctx.strokeStyle = `rgba(220,225,235,${Math.min(layerAlpha, 0.18)})`;
-                    ctx.lineWidth = 0.2 + (1 - life) * 0.5 + strength * 0.012;
-                    ctx.stroke();
-                }
-
-                // 中心光点（同样带有波浪感）
-                if (life > 0.3) {
-                    const centerAlpha = life * Math.min(1, strength / 20) * 0.10;
-                    const cSize = 1.5 + (1 - life) * 3 + strength * 0.04;
-                    const shiftX = Math.sin(STATE.frame * 0.02 + ripple.distortionSeed) * 0.5;
-                    const shiftY = Math.cos(STATE.frame * 0.018 + ripple.distortionSeed * 0.7) * 0.5;
-                    ctx.beginPath();
-                    ctx.arc(ripple.x + shiftX, ripple.y + shiftY, cSize, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(220,225,235,${Math.min(centerAlpha, 0.15)})`;
-                    ctx.fill();
-                }
-            }
+            // ---- 绘制涟漪 ----
+            drawRipples();
 
             // ---- 绘制节点 ----
             for (let node of STATE.nodes) {
@@ -877,7 +950,7 @@
                 }
             }
 
-            // ---- 鼠标触发涟漪（带冷却） ----
+            // ---- 鼠标触发涟漪（带速度方向） ----
             if (inside) {
                 for (let node of STATE.nodes) {
                     const dx = mx - node.x;
@@ -890,7 +963,7 @@
                             if (d2 < 8 && r.life > 0.5) { hasRecent = true; break; }
                         }
                         if (!hasRecent) {
-                            triggerNodeRipple(node, 7 + Math.random() * 4);
+                            triggerNodeRipple(node, 7 + Math.random() * 4, STATE.mouseVX, STATE.mouseVY);
                         }
                     }
                 }
@@ -1001,8 +1074,9 @@
         }, { once: true });
 
         console.log('✦ Ripple — 光 · 涟漪');
-        console.log('✦ 手写花体标题 · 节点涟漪冷却: 500ms');
-        console.log('✦ 增强波浪感 · 不规则类圆形涟漪');
+        console.log('✦ 标题: Ripple · 花体字');
+        console.log('✦ 涟漪椭圆拉伸 · 随鼠标方向变形');
+        console.log('✦ 推开幅度: 6 · 回弹更慢 · 阻力更大');
     </script>
 </body>
 </html>
