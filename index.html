@@ -39,20 +39,6 @@
             height: 100% !important;
         }
 
-        .watermark {
-            position: absolute;
-            top: 40px;
-            left: 44px;
-            z-index: 10;
-            font-size: 10px;
-            font-weight: 300;
-            letter-spacing: 0.25em;
-            color: rgba(255, 255, 255, 0.04);
-            text-transform: uppercase;
-            pointer-events: none;
-            user-select: none;
-        }
-
         .nav-link {
             position: absolute;
             bottom: 40px;
@@ -100,11 +86,6 @@
         }
 
         @media (max-width: 768px) {
-            .watermark {
-                top: 24px;
-                left: 24px;
-                font-size: 8px;
-            }
             .nav-link {
                 bottom: 24px;
                 left: 24px;
@@ -117,11 +98,6 @@
         }
 
         @media (max-width: 480px) {
-            .watermark {
-                top: 16px;
-                left: 16px;
-                font-size: 7px;
-            }
             .nav-link {
                 bottom: 16px;
                 left: 16px;
@@ -134,7 +110,6 @@
 <body>
 
     <section id="demo-section">
-        <div class="watermark">Ripple</div>
         <a class="nav-link" href="about.html">↗ 关于项目</a>
         <div class="hint">移动 · 光随行<br />涟漪 · 自生发</div>
     </section>
@@ -145,7 +120,6 @@
         // ============================================================
         const STATE = {
             nodes: [],
-            letterNodes: [],
             ripples: [],
             mouseX: -9999,
             mouseY: -9999,
@@ -155,6 +129,7 @@
             bellTimer: null,
             autoRippleTimer: null,
             isMobile: false,
+            titleLetters: [],
         };
 
         // ============================================================
@@ -176,10 +151,9 @@
         }
 
         // ============================================================
-        //  参数（电脑端基准）
+        //  参数
         // ============================================================
         const PARAMS = {
-            // 普通节点 - 电脑端
             nodeCountDesktop: 140,
             nodeCountMobile: 70,
 
@@ -193,8 +167,7 @@
             lineBaseAlpha: 0.008,
             lineBrightnessFactor: 0.18,
 
-            // 涟漪亮度提升（用户要求更亮）
-            rippleAlphaBase: 0.24, // 之前 0.16，提升 50%
+            rippleAlphaBase: 0.24,
 
             waveDistortion: 0.6,
             waveFrequency: 2.5,
@@ -203,151 +176,45 @@
             floatAmplitude: 0.8,
             floatSpeed: 0.004,
 
-            // 鼠标推开（用户要求更小）
+            // 鼠标推开 ———— 更慢、阻力更大
             pushRadius: 100,
-            pushStrength: 12, // 之前 22，调到 12
+            pushStrength: 10, // 更小
+            springConstant: 0.025, // 更小 → 回弹更慢
+            damping: 0.96, // 更大 → 阻力更大
 
             // 自动涟漪
             autoRippleIntervalMin: 10000,
             autoRippleIntervalMax: 15000,
 
-            // 字母节点
-            letterBrightnessBoost: 2.0,
-            letterGlowRadius: 40,
+            // 鼠标光圈亮度
+            mouseGlowIntensity: 0.12,
+            mouseMidGlow: 0.08,
+            mouseCoreGlow: 0.30,
+            mouseInnerGlow: 0.14,
 
-            // 鼠标光圈亮度（用户要求更亮）
-            mouseGlowIntensity: 0.12, // 之前 0.065，提升约 85%
-            mouseMidGlow: 0.08, // 之前 0.05
-            mouseCoreGlow: 0.30, // 之前 0.20
-            mouseInnerGlow: 0.14, // 之前 0.08
-
-            // 延伸线
-            extensionLineCount: 2,
-            extensionLineLength: 18,
-            extensionLineAlpha: 0.12,
+            // 文字标题（独立层）
+            titleSize: 0.08, // 相对视口宽度
+            titleY: 0.18, // 距顶部比例
+            titleLetterSpacing: 0.04,
+            titleGlowIntensity: 0.5,
         };
 
         // ============================================================
-        //  字母「Ripple」节点坐标（优化版 B + C + D）
-        // ============================================================
-        function getLetterPositions(w, h) {
-            const totalWidth = w * 0.30;
-            const startX = (w - totalWidth) / 2;
-            const baseY = h * 0.20;
-
-            const letterWidths = {
-                R: 0.22,
-                i: 0.08,
-                p: 0.18,
-                p: 0.18,
-                l: 0.08,
-                e: 0.18,
-            };
-            const totalRatio = Object.values(letterWidths).reduce((a, b) => a + b, 0);
-            const gapRatio = 0.04;
-            const totalWithGap = totalRatio + gapRatio * 5;
-
-            let currentX = startX;
-            const letterData = [];
-            const letters = ['R', 'i', 'p', 'p', 'l', 'e'];
-
-            for (let idx = 0; idx < letters.length; idx++) {
-                const char = letters[idx];
-                const widthRatio = letterWidths[char] / totalWithGap;
-                const lw = totalWidth * widthRatio;
-                const lh = lw * 1.3;
-
-                const cx = currentX + lw / 2;
-                const cy = baseY + lh / 2;
-                const s = lw * 0.38;
-
-                const nodes = getCharNodesOptimized(char, cx, cy, s);
-                letterData.push({
-                    char: char,
-                    nodes: nodes,
-                    cx: cx,
-                    cy: cy,
-                    width: lw,
-                });
-
-                currentX += lw + totalWidth * gapRatio;
-            }
-
-            return letterData;
-        }
-
-        function getCharNodesOptimized(char, cx, cy, s) {
-            const pts = [];
-            const add = (x, y) => pts.push({ x: cx + x * s, y: cy + y * s });
-
-            switch (char) {
-                case 'R':
-                    // 7个节点：左竖线（3个）+ 上弧（2个）+ 中横（1个）+ 右下斜腿（1个）
-                    add(-0.5, -0.9);
-                    add(-0.5, -0.3);
-                    add(-0.5, 0.3);
-                    add(0.0, -0.7);
-                    add(0.5, -0.4);
-                    add(0.5, 0.0);
-                    add(0.0, 0.6);
-                    break;
-                case 'i':
-                    // 4个节点：竖线（2个）+ 点（2个，一个主点一个副点）
-                    add(0.0, -0.4);
-                    add(0.0, 0.2);
-                    add(0.0, 0.8);
-                    add(0.0, -1.2); // 点
-                    break;
-                case 'p':
-                    // 6个节点：左竖线（3个）+ 上弧（2个）+ 下弧（1个）
-                    add(-0.5, -0.9);
-                    add(-0.5, -0.2);
-                    add(-0.5, 0.5);
-                    add(0.0, -0.7);
-                    add(0.5, -0.4);
-                    add(0.3, 0.2);
-                    break;
-                case 'l':
-                    // 3个节点：竖线均匀分布
-                    add(0.0, -0.9);
-                    add(0.0, 0.0);
-                    add(0.0, 0.9);
-                    break;
-                case 'e':
-                    // 6个节点：左竖线（2个）+ 上弧（1个）+ 中横（1个）+ 下弧（2个）
-                    add(-0.5, -0.8);
-                    add(-0.5, 0.0);
-                    add(-0.2, -0.8);
-                    add(0.5, -0.8);
-                    add(0.5, 0.0);
-                    add(-0.2, 0.6);
-                    break;
-                default:
-                    add(-0.4, -0.8);
-                    add(0.0, 0.0);
-                    add(0.4, 0.8);
-            }
-            return pts;
-        }
-
-        // ============================================================
-        //  生成节点（普通 + 字母），含明暗随机分布
+        //  生成普通节点（不再包含字母节点）
         // ============================================================
         function generateNodes() {
             const allNodes = [];
             const isMobile = checkMobile();
             const targetCount = isMobile ? PARAMS.nodeCountMobile : PARAMS.nodeCountDesktop;
 
-            // ---- 1. 普通随机节点 ----
             const minDist = Math.min(W, H) * 0.035;
             const margin = 30;
             let attempts = 0;
             const maxAttempts = 8000;
 
-            // 生成亮度分布：使用均匀随机，保证整体明暗平均分布
+            // 亮度分布：均匀随机
             const brightnessLevels = [];
             for (let i = 0; i < targetCount; i++) {
-                // 亮度在 0.1 ~ 1.0 之间均匀分布，保证有亮有暗
                 brightnessLevels.push(0.1 + Math.random() * 0.9);
             }
 
@@ -358,17 +225,16 @@
                 const x = margin + Math.random() * (W - 2 * margin);
                 const y = margin + Math.random() * (H - 2 * margin);
 
-                // 避开字母区域（中上区域）
-                const letterRegionY = H * 0.05;
-                const letterRegionH = H * 0.30;
-                const letterRegionX = W * 0.20;
-                const letterRegionW = W * 0.60;
-                const inLetterRegion = y > letterRegionY && y < letterRegionY + letterRegionH &&
-                    x > letterRegionX && x < letterRegionX + letterRegionW;
+                // 避开标题区域（中上）
+                const titleRegionY = H * 0.05;
+                const titleRegionH = H * 0.25;
+                const titleRegionX = W * 0.15;
+                const titleRegionW = W * 0.70;
+                const inTitleRegion = y > titleRegionY && y < titleRegionY + titleRegionH &&
+                    x > titleRegionX && x < titleRegionX + titleRegionW;
 
-                // 如果在字母区域，降低接受概率（但不是完全禁止）
                 let skip = false;
-                if (inLetterRegion && Math.random() > 0.3) {
+                if (inTitleRegion && Math.random() > 0.25) {
                     skip = true;
                 }
 
@@ -387,14 +253,13 @@
                             y: y,
                             baseX: x,
                             baseY: y,
-                            brightness: brightBase * 0.3, // 初始亮度随明暗分布
+                            brightness: brightBase * 0.3,
                             targetBrightness: 0,
                             phase: Math.random() * Math.PI * 2,
                             waveOffset: Math.random() * 100,
-                            isLetter: false,
                             vx: 0,
                             vy: 0,
-                            baseBrightness: brightBase, // 存储基础亮度倍率
+                            baseBrightness: brightBase,
                         });
                         idx++;
                     }
@@ -402,95 +267,126 @@
             }
             allNodes.push(...tempNodes);
 
-            // ---- 2. 字母节点 ----
-            const letterData = getLetterPositions(W, H);
-            const letterNodes = [];
-
-            for (let li of letterData) {
-                for (let p of li.nodes) {
-                    let tooClose = false;
-                    for (let n of allNodes) {
-                        const dx = n.x - p.x;
-                        const dy = n.y - p.y;
-                        if (dx * dx + dy * dy < 300) { tooClose = true; break; }
-                    }
-                    if (!tooClose) {
-                        const node = {
-                            id: allNodes.length,
-                            x: p.x,
-                            y: p.y,
-                            baseX: p.x,
-                            baseY: p.y,
-                            brightness: 0.5 + Math.random() * 0.3,
-                            targetBrightness: 0.6,
-                            phase: Math.random() * Math.PI * 2,
-                            waveOffset: Math.random() * 100,
-                            isLetter: true,
-                            vx: 0,
-                            vy: 0,
-                            letterChar: li.char,
-                            baseBrightness: 0.7 + Math.random() * 0.3,
-                        };
-                        allNodes.push(node);
-                        letterNodes.push(node);
-                    }
-                }
-            }
-
             STATE.nodes = allNodes;
-            STATE.letterNodes = letterNodes;
+            console.log(`✦ 生成 ${allNodes.length} 个节点 (手机模式: ${isMobile})`);
+        }
 
-            // ---- 存储字母连线信息 ----
-            STATE.letterConnections = [];
-            for (let li of letterData) {
-                const pts = li.nodes;
-                for (let i = 0; i < pts.length - 1; i++) {
-                    const n1 = allNodes.find(n =>
-                        Math.abs(n.x - pts[i].x) < 3 && Math.abs(n.y - pts[i].y) < 3 && n.isLetter
-                    );
-                    const n2 = allNodes.find(n =>
-                        Math.abs(n.x - pts[i + 1].x) < 3 && Math.abs(n.y - pts[i + 1].y) < 3 && n.isLetter
-                    );
-                    if (n1 && n2) {
-                        STATE.letterConnections.push({ n1, n2 });
-                    }
-                }
-                // 额外连线：首尾相连，形成轮廓（C方案）
-                if (pts.length >= 3) {
-                    const nFirst = allNodes.find(n =>
-                        Math.abs(n.x - pts[0].x) < 3 && Math.abs(n.y - pts[0].y) < 3 && n.isLetter
-                    );
-                    const nLast = allNodes.find(n =>
-                        Math.abs(n.x - pts[pts.length - 1].x) < 3 && Math.abs(n.y - pts[pts.length - 1].y) < 3 && n
-                        .isLetter
-                    );
-                    if (nFirst && nLast && nFirst !== nLast) {
-                        STATE.letterConnections.push({ n1: nFirst, n2: nLast });
-                    }
+        // ============================================================
+        //  文字标题系统（独立层）
+        // ============================================================
+        function buildTitle() {
+            const text = 'RIPPLE';
+            const chars = text.split('');
+            const totalWidth = W * 0.45;
+            const charWidth = totalWidth / chars.length;
+            const baseY = H * PARAMS.titleY;
+            const fontSize = Math.min(W * 0.07, H * 0.09);
+
+            STATE.titleLetters = [];
+
+            for (let i = 0; i < chars.length; i++) {
+                const x = (W - totalWidth) / 2 + i * charWidth + charWidth / 2;
+                const y = baseY;
+                STATE.titleLetters.push({
+                    char: chars[i],
+                    x: x,
+                    y: y,
+                    baseX: x,
+                    baseY: y,
+                    size: fontSize,
+                    phase: i * 0.5,
+                });
+            }
+        }
+
+        function drawTitle() {
+            const letters = STATE.titleLetters;
+            if (!letters || letters.length === 0) return;
+
+            const time = STATE.frame;
+
+            for (let i = 0; i < letters.length; i++) {
+                const l = letters[i];
+                const cx = l.x;
+                const cy = l.y + Math.sin(time * 0.008 + i * 0.7) * 1.5;
+
+                // 光晕（多层）
+                const glowSize = l.size * 1.8 + Math.sin(time * 0.01 + i) * 4;
+
+                // 最外层光晕
+                const grad1 = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowSize);
+                grad1.addColorStop(0, `rgba(255,255,255,${0.04 + 0.02 * Math.sin(time * 0.01 + i * 0.5)})`);
+                grad1.addColorStop(0.5, `rgba(255,255,255,0.01)`);
+                grad1.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = grad1;
+                ctx.beginPath();
+                ctx.arc(cx, cy, glowSize, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 第二层光晕
+                const grad2 = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowSize * 0.5);
+                grad2.addColorStop(0, `rgba(255,255,255,${0.06 + 0.03 * Math.sin(time * 0.015 + i * 0.3)})`);
+                grad2.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = grad2;
+                ctx.beginPath();
+                ctx.arc(cx, cy, glowSize * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 文字主体（半透明发光）
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = `${l.size}px "Inter", "Helvetica Neue", sans-serif`;
+                ctx.fontWeight = '200';
+
+                // 描边发光
+                ctx.shadowColor = `rgba(255,255,255,${0.15 + 0.08 * Math.sin(time * 0.012 + i * 0.4)})`;
+                ctx.shadowBlur = 20 + Math.sin(time * 0.01 + i) * 4;
+
+                ctx.fillStyle = `rgba(255,255,255,${0.6 + 0.15 * Math.sin(time * 0.008 + i * 0.6)})`;
+                ctx.fillText(l.char, cx, cy + 2);
+
+                // 重置阴影
+                ctx.shadowBlur = 0;
+
+                // 极细的二次描边（增加层次）
+                ctx.strokeStyle = `rgba(255,255,255,${0.08 + 0.04 * Math.sin(time * 0.01 + i * 0.7)})`;
+                ctx.lineWidth = 0.5;
+                ctx.strokeText(l.char, cx, cy + 2);
+
+                // 小光点装饰（每个字母上下浮动的小点）
+                const dotCount = 2;
+                for (let d = 0; d < dotCount; d++) {
+                    const angle = time * 0.01 + i * 1.2 + d * 2.1;
+                    const dist = l.size * (0.4 + 0.1 * Math.sin(time * 0.005 + i + d));
+                    const dx = Math.cos(angle) * dist;
+                    const dy = Math.sin(angle * 0.7 + i) * dist * 0.3;
+                    const dotSize = 0.8 + 0.6 * Math.sin(time * 0.02 + i + d);
+                    ctx.beginPath();
+                    ctx.arc(cx + dx, cy + dy - 2, dotSize, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255,255,255,${0.08 + 0.06 * Math.sin(time * 0.015 + i + d)})`;
+                    ctx.fill();
                 }
             }
 
-            // ---- 3. 生成延伸线（蔓延感） ----
-            STATE.extensionLines = [];
-            for (let node of letterNodes) {
-                const count = 1 + Math.floor(Math.random() * PARAMS.extensionLineCount);
-                for (let i = 0; i < count; i++) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const len = PARAMS.extensionLineLength * (0.5 + Math.random() * 0.8);
-                    const endX = node.x + Math.cos(angle) * len;
-                    const endY = node.y + Math.sin(angle) * len;
-                    STATE.extensionLines.push({
-                        startX: node.x,
-                        startY: node.y,
-                        endX: endX,
-                        endY: endY,
-                        alpha: PARAMS.extensionLineAlpha * (0.5 + Math.random() * 0.5),
-                    });
-                }
-            }
+            // 底部细线（装饰）
+            const lineY = letters[0].y + letters[0].size * 0.6;
+            const lineX1 = letters[0].x - letters[0].size * 0.7;
+            const lineX2 = letters[letters.length - 1].x + letters[letters.length - 1].size * 0.7;
+            ctx.beginPath();
+            ctx.moveTo(lineX1, lineY);
+            ctx.lineTo(lineX2, lineY);
+            ctx.strokeStyle = `rgba(255,255,255,${0.04 + 0.02 * Math.sin(time * 0.008)})`;
+            ctx.lineWidth = 0.3;
+            ctx.stroke();
 
-            console.log(`✦ 生成 ${allNodes.length} 个节点 (含 ${letterNodes.length} 个字母节点)`);
-            console.log(`✦ 手机模式: ${checkMobile()}`);
+            // 底部细线 2（更淡，错位）
+            const lineY2 = lineY + 6 + Math.sin(time * 0.01) * 1.5;
+            ctx.beginPath();
+            ctx.moveTo(lineX1 + 10, lineY2);
+            ctx.lineTo(lineX2 - 10, lineY2);
+            ctx.strokeStyle = `rgba(255,255,255,${0.02 + 0.015 * Math.sin(time * 0.01 + 0.5)})`;
+            ctx.lineWidth = 0.2;
+            ctx.stroke();
         }
 
         // ============================================================
@@ -654,15 +550,14 @@
         }
 
         function triggerAutoRipple() {
-            const candidates = [...STATE.letterNodes, ...STATE.nodes];
-            const shuffled = candidates.sort(() => Math.random() - 0.5);
+            const shuffled = [...STATE.nodes].sort(() => Math.random() - 0.5);
             const count = 1 + Math.floor(Math.random() * 2);
             const selected = shuffled.slice(0, count);
 
             for (let node of selected) {
                 node.targetBrightness = 0.9 + Math.random() * 0.1;
                 setTimeout(() => {
-                    node.targetBrightness = node.isLetter ? 0.6 : 0.3;
+                    node.targetBrightness = 0.3;
                 }, 300);
 
                 const strength = 8 + Math.random() * 6;
@@ -726,7 +621,10 @@
             canvas.style.width = W + 'px';
             canvas.style.height = H + 'px';
             ctx.scale(dpr, dpr);
+
             generateNodes();
+            buildTitle();
+
             if (STATE.autoRippleTimer) {
                 clearTimeout(STATE.autoRippleTimer);
             }
@@ -749,7 +647,7 @@
             const inside = STATE.mouseInside;
 
             // ============================================================
-            //  1. 更新节点（含浮动 + 鼠标推开 + 回摆 + 明暗变化）
+            //  1. 更新节点（更慢、阻力更大）
             // ============================================================
             for (let node of STATE.nodes) {
                 // 浮动
@@ -757,7 +655,7 @@
                 const floatOffsetY = Math.cos(STATE.frame * PARAMS.floatSpeed * 0.8 + node.phase * 0.7) * PARAMS
                 .floatAmplitude;
 
-                // 鼠标推开
+                // 鼠标推开（更小力度）
                 let pushX = 0,
                     pushY = 0;
                 if (inside) {
@@ -775,10 +673,10 @@
                 const targetX = node.baseX + floatOffsetX + pushX;
                 const targetY = node.baseY + floatOffsetY + pushY;
 
-                // 物理模拟（速度 + 阻尼回摆）
-                const springX = (targetX - node.x) * 0.04;
-                const springY = (targetY - node.y) * 0.04;
-                const damping = 0.92;
+                // 物理模拟：更小弹簧常数 + 更大阻尼 → 更慢、阻力更大
+                const springX = (targetX - node.x) * PARAMS.springConstant;
+                const springY = (targetY - node.y) * PARAMS.springConstant;
+                const damping = PARAMS.damping;
                 node.vx = (node.vx + springX) * damping;
                 node.vy = (node.vy + springY) * damping;
                 node.x += node.vx;
@@ -791,7 +689,7 @@
                 if (Math.abs(dxLimit) > maxOffset) node.x = node.baseX + Math.sign(dxLimit) * maxOffset;
                 if (Math.abs(dyLimit) > maxOffset) node.y = node.baseY + Math.sign(dyLimit) * maxOffset;
 
-                // ---- 亮度更新（含明暗分布） ----
+                // ---- 亮度 ----
                 let distToMouse = 9999;
                 if (inside) {
                     const dx = mx - node.x;
@@ -805,15 +703,8 @@
                     targetBright = (1 - t * t) * PARAMS.nodeBrightnessFactor;
                 }
 
-                // 应用基础亮度倍率（明暗分布）
                 const baseMult = node.baseBrightness || 0.5;
                 targetBright = targetBright * (0.3 + 0.7 * baseMult);
-
-                // 字母节点基础亮度更高
-                if (node.isLetter) {
-                    targetBright = Math.max(targetBright, 0.35 * baseMult);
-                    targetBright *= PARAMS.letterBrightnessBoost;
-                }
 
                 node.targetBrightness = Math.min(targetBright, 1.0);
                 node.brightness += (node.targetBrightness - node.brightness) * 0.05;
@@ -826,49 +717,14 @@
             updateRipples();
 
             // ============================================================
-            //  3. 绘制延伸线（蔓延感，在字母连线之前绘制）
-            // ============================================================
-            if (STATE.extensionLines) {
-                for (let ext of STATE.extensionLines) {
-                    ctx.beginPath();
-                    ctx.moveTo(ext.startX, ext.startY);
-                    ctx.lineTo(ext.endX, ext.endY);
-                    ctx.strokeStyle = `rgba(255,255,255,${ext.alpha * 0.6})`;
-                    ctx.lineWidth = 0.3;
-                    ctx.stroke();
-                }
-            }
-
-            // ============================================================
-            //  4. 绘制字母连线（高亮）
-            // ============================================================
-            if (STATE.letterConnections) {
-                for (let conn of STATE.letterConnections) {
-                    const n1 = conn.n1;
-                    const n2 = conn.n2;
-                    if (!n1 || !n2) continue;
-                    const avgBright = (n1.brightness + n2.brightness) * 0.5;
-                    const alpha = 0.2 + avgBright * 0.5;
-                    ctx.beginPath();
-                    ctx.moveTo(n1.x, n1.y);
-                    ctx.lineTo(n2.x, n2.y);
-                    ctx.strokeStyle = `rgba(255,255,255,${Math.min(alpha, 0.7)})`;
-                    ctx.lineWidth = 1.2 + avgBright * 1.2;
-                    ctx.stroke();
-                }
-            }
-
-            // ============================================================
-            //  5. 绘制普通连线（背景）
+            //  3. 绘制普通连线
             // ============================================================
             const connectDist = Math.min(W, H) * 0.10;
             for (let i = 0; i < STATE.nodes.length; i++) {
                 const n1 = STATE.nodes[i];
                 if (n1.brightness < 0.01) continue;
-                if (n1.isLetter) continue;
                 for (let j = i + 1; j < STATE.nodes.length; j++) {
                     const n2 = STATE.nodes[j];
-                    if (n2.isLetter) continue;
                     const dx = n1.x - n2.x;
                     const dy = n1.y - n2.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
@@ -888,7 +744,7 @@
             }
 
             // ============================================================
-            //  6. 绘制涟漪（更亮）
+            //  4. 绘制涟漪
             // ============================================================
             for (let ripple of STATE.ripples) {
                 if (!ripple.isActive) continue;
@@ -941,7 +797,7 @@
             }
 
             // ============================================================
-            //  7. 绘制节点
+            //  5. 绘制节点
             // ============================================================
             for (let node of STATE.nodes) {
                 const b = node.brightness;
@@ -950,14 +806,13 @@
                 const size = 0.6 + finalBright * 3.0;
                 const alpha = Math.min(finalBright * 0.5, 0.4);
 
-                const glowMult = node.isLetter ? 2.0 : 1.0;
                 if (finalBright > 0.02) {
-                    const glowR = (4 + finalBright * 25) * glowMult;
+                    const glowR = 4 + finalBright * 25;
                     const distX = Math.sin(STATE.frame * 0.005 + node.waveOffset) * 0.3;
                     const distY = Math.cos(STATE.frame * 0.007 + node.waveOffset * 0.8) * 0.3;
                     const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowR);
-                    grad.addColorStop(0, `rgba(255,255,255,${finalBright * 0.06 * glowMult})`);
-                    grad.addColorStop(0.5, `rgba(255,255,255,${finalBright * 0.03 * glowMult})`);
+                    grad.addColorStop(0, `rgba(255,255,255,${finalBright * 0.06})`);
+                    grad.addColorStop(0.5, `rgba(255,255,255,${finalBright * 0.03})`);
                     grad.addColorStop(1, 'rgba(255,255,255,0)');
                     ctx.fillStyle = grad;
                     ctx.beginPath();
@@ -966,22 +821,21 @@
                     ctx.fill();
                 }
 
-                const coreSize = node.isLetter ? size * 1.4 : size;
                 ctx.beginPath();
-                ctx.arc(node.x, node.y, coreSize, 0, Math.PI * 2);
+                ctx.arc(node.x, node.y, size, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(255,255,255,${alpha})`;
                 ctx.fill();
 
                 if (finalBright > 0.2) {
                     ctx.beginPath();
-                    ctx.arc(node.x - coreSize * 0.2, node.y - coreSize * 0.2, coreSize * 0.25, 0, Math.PI * 2);
+                    ctx.arc(node.x - size * 0.2, node.y - size * 0.2, size * 0.25, 0, Math.PI * 2);
                     ctx.fillStyle = `rgba(255,255,255,${finalBright * 0.14})`;
                     ctx.fill();
                 }
             }
 
             // ============================================================
-            //  8. 鼠标触发节点涟漪
+            //  6. 鼠标触发节点涟漪
             // ============================================================
             if (inside) {
                 for (let node of STATE.nodes) {
@@ -1002,12 +856,11 @@
             }
 
             // ============================================================
-            //  9. 鼠标光圈（更亮 + 边缘波浪感）
+            //  7. 鼠标光圈
             // ============================================================
             if (inside && mx > 0 && mx < W && my > 0 && my < H) {
                 const mainR = PARAMS.lightRadius;
 
-                // ---- 主光晕（边缘波浪变形，更亮） ----
                 const segments = 60;
                 const waveAmp = 5 + Math.sin(STATE.frame * 0.015) * 3;
                 ctx.beginPath();
@@ -1032,7 +885,6 @@
                 ctx.fillStyle = grad;
                 ctx.fill();
 
-                // ---- 中圈（更亮） ----
                 const midR = 45;
                 const grad2 = ctx.createRadialGradient(mx, my, 0, mx, my, midR);
                 grad2.addColorStop(0, `rgba(255,255,255,${PARAMS.mouseMidGlow})`);
@@ -1043,14 +895,12 @@
                 ctx.arc(mx, my, midR, 0, Math.PI * 2);
                 ctx.fill();
 
-                // ---- 核心亮点（更亮） ----
                 const pulse = 1 + Math.sin(STATE.frame * 0.02) * 0.06;
                 ctx.beginPath();
                 ctx.arc(mx, my, 2.5 * pulse, 0, Math.PI * 2);
                 ctx.fillStyle = `rgba(255,255,255,${PARAMS.mouseCoreGlow})`;
                 ctx.fill();
 
-                // ---- 内圈微光（更亮） ----
                 const innerR = 14 * pulse;
                 const grad3 = ctx.createRadialGradient(mx, my, 0, mx, my, innerR);
                 grad3.addColorStop(0, `rgba(255,255,255,${PARAMS.mouseInnerGlow})`);
@@ -1060,7 +910,6 @@
                 ctx.arc(mx, my, innerR, 0, Math.PI * 2);
                 ctx.fill();
 
-                // ---- 极细十字 ----
                 const cross = 10;
                 ctx.strokeStyle = 'rgba(255,255,255,0.02)';
                 ctx.lineWidth = 0.3;
@@ -1071,7 +920,6 @@
                 ctx.lineTo(mx, my + cross);
                 ctx.stroke();
 
-                // ---- 外圈呼吸环（带波浪） ----
                 const breatheR = 50 + Math.sin(STATE.frame * 0.015) * 4;
                 ctx.beginPath();
                 for (let k = 0; k <= 50; k++) {
@@ -1088,6 +936,11 @@
                 ctx.lineWidth = 0.3;
                 ctx.stroke();
             }
+
+            // ============================================================
+            //  8. 绘制标题（在最上层，独立于节点系统）
+            // ============================================================
+            drawTitle();
 
             // ---- 角落信息 ----
             const rippleCount = STATE.ripples.filter(r => r.isActive).length;
@@ -1111,9 +964,8 @@
         }, { once: true });
 
         console.log('✦ Ripple — 光 · 涟漪');
-        console.log('✦ 节点明暗平均分布 · 鼠标光圈更亮 · 涟漪更亮');
-        console.log(`✦ 电脑端节点: ${PARAMS.nodeCountDesktop} · 手机端节点: ${PARAMS.nodeCountMobile}`);
-        console.log(`✦ 推开幅度: ${PARAMS.pushStrength}px · 涟漪亮度提升 50%`);
+        console.log('✦ 独立文字标题层 · 物理参数：更慢、阻力更大');
+        console.log(`✦ 推开幅度: ${PARAMS.pushStrength}px · 弹簧常数: ${PARAMS.springConstant} · 阻尼: ${PARAMS.damping}`);
     </script>
 </body>
 </html>
