@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>光 · 涟漪 — Ripple</title>
 
+    <!-- Google Fonts: 手写花体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet" />
+    <!-- 备用字体 Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200;14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
 
     <style>
@@ -153,7 +156,6 @@
         //  参数
         // ============================================================
         const PARAMS = {
-            // 电脑端节点数量：150
             nodeCountDesktop: 150,
             nodeCountMobile: 70,
 
@@ -168,9 +170,11 @@
             lineBrightnessFactor: 0.18,
 
             rippleAlphaBase: 0.24,
+            rippleCooldown: 500, // 毫秒，节点涟漪冷却时间
 
-            waveDistortion: 0.6,
-            waveFrequency: 2.5,
+            // 波浪参数增强
+            waveDistortion: 1.2, // 增大扭曲幅度
+            waveFrequency: 3.5, // 提高频率，产生更多波浪细节
 
             floatAmplitude: 0.8,
             floatSpeed: 0.004,
@@ -188,24 +192,22 @@
             mouseCoreGlow: 0.25,
             mouseInnerGlow: 0.10,
 
-            // ===== 标题参数（花体字 + 透明质感） =====
+            // ===== 标题参数（手写花体 Great Vibes） =====
             titleText: 'RIPPLE',
             titleSize: 0.075,
             titleY: 0.18,
             titleLetterSpacing: 0.06,
 
-            // 底层光晕（保持不变）
             glowLayerAlpha: 0.30,
             glowLayerBlur: 45,
 
-            // 上层花体字（透明质感）
             textLayerAlpha: 0.55,
             textLayerGlow: 8,
             textLayerGlowAlpha: 0.08,
         };
 
         // ============================================================
-        //  生成普通节点（150个）
+        //  生成普通节点
         // ============================================================
         function generateNodes() {
             const allNodes = [];
@@ -217,7 +219,6 @@
             let attempts = 0;
             const maxAttempts = 10000;
 
-            // 标题区域（避开）
             const titleRegionY = H * 0.05;
             const titleRegionH = H * 0.25;
             const titleRegionX = W * 0.10;
@@ -264,6 +265,8 @@
                             vx: 0,
                             vy: 0,
                             baseBrightness: brightBase,
+                            // 涟漪冷却时间戳
+                            lastRippleTime: 0,
                         });
                         idx++;
                     }
@@ -276,7 +279,7 @@
         }
 
         // ============================================================
-        //  绘制花体字标题（透明质感）
+        //  绘制手写花体标题（Great Vibes + 透明质感）
         // ============================================================
         function drawTitle() {
             const text = PARAMS.titleText;
@@ -285,22 +288,14 @@
             const cx = W / 2;
             const cy = baseY;
 
-            // ---- 使用衬线花体风格 ----
-            // 用 Georgia 或 Times New Roman 的 italic 模拟花体字
-            // 同时保留 Inter 作为 fallback
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            // 花体字：衬线 + 斜体 + 宽松字距
-            const fontFamily = '"Georgia", "Times New Roman", "Inter", serif';
-            ctx.font = `italic ${fontSize}px ${fontFamily}`;
-            ctx.fontWeight = '300';
+            // 使用 Great Vibes 手写花体 + 备用字体
+            const fontFamily = '"Great Vibes", "Alex Brush", "Tangerine", "Georgia", serif';
+            ctx.font = `${fontSize}px ${fontFamily}`;
 
-            // ============================================================
-            //  底层光晕（保持不变，但略微降低透明度以配合灰阶）
-            // ============================================================
-
-            // 第一层：大范围极淡光晕
+            // ---- 底层光晕 ----
             ctx.save();
             ctx.shadowColor = `rgba(220,225,235,${PARAMS.glowLayerAlpha * 0.3})`;
             ctx.shadowBlur = PARAMS.glowLayerBlur * 1.5;
@@ -309,7 +304,6 @@
             ctx.fillText(text, cx, cy + 2);
             ctx.restore();
 
-            // 第二层：中等范围光晕
             ctx.save();
             ctx.shadowColor = `rgba(220,225,235,${PARAMS.glowLayerAlpha * 0.4})`;
             ctx.shadowBlur = PARAMS.glowLayerBlur;
@@ -318,7 +312,6 @@
             ctx.fillText(text, cx, cy + 2);
             ctx.restore();
 
-            // 第三层：核心光晕
             ctx.save();
             ctx.shadowColor = `rgba(220,225,235,${PARAMS.glowLayerAlpha * 0.6})`;
             ctx.shadowBlur = PARAMS.glowLayerBlur * 0.5;
@@ -327,9 +320,7 @@
             ctx.fillText(text, cx, cy + 2);
             ctx.restore();
 
-            // ============================================================
-            //  字母独立光晕圈
-            // ============================================================
+            // ---- 字母独立光晕圈 ----
             for (let i = 0; i < text.length; i++) {
                 const char = text[i];
                 const charOffset = (i - (text.length - 1) / 2) * fontSize * (0.75 + PARAMS.titleLetterSpacing);
@@ -353,12 +344,7 @@
                 }
             }
 
-            // ============================================================
-            //  上层：花体字（透明质感）
-            // ============================================================
-
-            // 绘制多次叠加，制造透明材质的层次感
-            // 第一次：微弱发光
+            // ---- 上层：手写花体字（透明质感） ----
             ctx.save();
             ctx.shadowColor = `rgba(220,225,235,${PARAMS.textLayerGlowAlpha})`;
             ctx.shadowBlur = PARAMS.textLayerGlow;
@@ -367,7 +353,6 @@
             ctx.fillText(text, cx, cy + 2);
             ctx.restore();
 
-            // 第二次：主要文字（半透明，花体）
             ctx.save();
             ctx.shadowBlur = 0;
             ctx.globalAlpha = PARAMS.textLayerAlpha * 0.85;
@@ -375,7 +360,6 @@
             ctx.fillText(text, cx, cy + 2);
             ctx.restore();
 
-            // 第三次：极细描边（增加材质边缘感）
             ctx.save();
             ctx.shadowBlur = 0;
             ctx.globalAlpha = 0.08;
@@ -384,7 +368,6 @@
             ctx.strokeText(text, cx, cy + 2);
             ctx.restore();
 
-            // 第四次：高光层（模拟透明材质的反光）
             ctx.save();
             ctx.shadowBlur = 0;
             ctx.globalAlpha = 0.06;
@@ -392,15 +375,12 @@
             ctx.fillText(text, cx - 1, cy);
             ctx.restore();
 
-            // ============================================================
-            //  装饰：字母之间的光点（灰阶适应）
-            // ============================================================
+            // ---- 装饰元素 ----
             for (let i = 0; i < text.length - 1; i++) {
                 const charOffset1 = (i - (text.length - 1) / 2) * fontSize * (0.75 + PARAMS.titleLetterSpacing);
                 const charOffset2 = (i + 1 - (text.length - 1) / 2) * fontSize * (0.75 + PARAMS.titleLetterSpacing);
                 const midX = cx + (charOffset1 + charOffset2) / 2;
                 const dotY = cy + fontSize * 0.28 + Math.sin(STATE.frame * 0.01 + i * 1.1) * 2;
-
                 const dotSize = 0.6 + 0.5 * Math.sin(STATE.frame * 0.015 + i * 0.7);
                 ctx.beginPath();
                 ctx.arc(midX, dotY, dotSize, 0, Math.PI * 2);
@@ -408,9 +388,6 @@
                 ctx.fill();
             }
 
-            // ============================================================
-            //  底部装饰线（灰阶适应）
-            // ============================================================
             const totalWidth = text.length * fontSize * (0.75 + PARAMS.titleLetterSpacing);
             const lineY = cy + fontSize * 0.58 + Math.sin(STATE.frame * 0.008) * 1.5;
             const lineStartX = cx - totalWidth * 0.48;
@@ -431,7 +408,6 @@
             ctx.lineWidth = 0.2;
             ctx.stroke();
 
-            // 端点小点
             const dotPositions = [
                 [lineStartX, lineY],
                 [lineEndX, lineY],
@@ -518,7 +494,7 @@
         }
 
         // ============================================================
-        //  涟漪系统
+        //  涟漪系统（带冷却 + 增强波浪）
         // ============================================================
         function createRipple(x, y, strength, maxRadiusOverride) {
             const speed = PARAMS.rippleSpeedBase + strength * 0.006 + (Math.random() - 0.5) * 0.08;
@@ -535,12 +511,21 @@
                 isActive: true,
                 phaseOffset: Math.random() * Math.PI * 2,
                 distortionSeed: Math.random() * 100,
-                distortionAmp: 0.3 + Math.random() * 0.6,
+                distortionAmp: 0.4 + Math.random() * 0.8, // 更大的随机幅度
                 randomAngle: Math.random() * Math.PI * 2,
+                // 每层涟漪独立的波动参数
+                wavePhase: Math.random() * Math.PI * 2,
             });
         }
 
         function triggerNodeRipple(node, strength) {
+            // 冷却检查：0.5 秒内只触发一次
+            const now = performance.now();
+            if (node.lastRippleTime && (now - node.lastRippleTime) < PARAMS.rippleCooldown) {
+                return;
+            }
+            node.lastRippleTime = now;
+
             const s = strength * (0.7 + Math.random() * 0.6);
             const maxR = 30 + s * 1.8 + Math.random() * 15;
             STATE.ripples.push({
@@ -555,9 +540,10 @@
                 isActive: true,
                 phaseOffset: Math.random() * Math.PI * 2,
                 distortionSeed: Math.random() * 100,
-                distortionAmp: 0.2 + Math.random() * 0.5,
+                distortionAmp: 0.3 + Math.random() * 0.7,
                 randomAngle: Math.random() * Math.PI * 2,
                 isSecondary: true,
+                wavePhase: Math.random() * Math.PI * 2,
             });
         }
 
@@ -619,8 +605,13 @@
                 }, 300);
 
                 const strength = 8 + Math.random() * 6;
-                createRipple(node.x, node.y, strength);
-                playBell();
+                // 自动涟漪也要遵循冷却
+                const now = performance.now();
+                if (!node.lastRippleTime || (now - node.lastRippleTime) >= PARAMS.rippleCooldown) {
+                    node.lastRippleTime = now;
+                    createRipple(node.x, node.y, strength);
+                    playBell();
+                }
             }
         }
 
@@ -696,7 +687,6 @@
         function draw() {
             STATE.frame++;
             ctx.clearRect(0, 0, W, H);
-            // 深蓝灰背景（寂静感）
             ctx.fillStyle = '#06080a';
             ctx.fillRect(0, 0, W, H);
 
@@ -704,9 +694,7 @@
             const my = STATE.mouseY;
             const inside = STATE.mouseInside;
 
-            // ============================================================
-            //  1. 更新节点
-            // ============================================================
+            // ---- 更新节点 ----
             for (let node of STATE.nodes) {
                 const floatOffsetX = Math.sin(STATE.frame * PARAMS.floatSpeed + node.phase) * PARAMS.floatAmplitude;
                 const floatOffsetY = Math.cos(STATE.frame * PARAMS.floatSpeed * 0.8 + node.phase * 0.7) * PARAMS
@@ -763,14 +751,10 @@
                 node.phase += 0.003;
             }
 
-            // ============================================================
-            //  2. 更新涟漪
-            // ============================================================
+            // ---- 更新涟漪 ----
             updateRipples();
 
-            // ============================================================
-            //  3. 绘制普通连线（灰阶适应）
-            // ============================================================
+            // ---- 绘制普通连线 ----
             const connectDist = Math.min(W, H) * 0.10;
             for (let i = 0; i < STATE.nodes.length; i++) {
                 const n1 = STATE.nodes[i];
@@ -795,9 +779,7 @@
                 }
             }
 
-            // ============================================================
-            //  4. 绘制涟漪
-            // ============================================================
+            // ---- 绘制涟漪（增强波浪感） ----
             for (let ripple of STATE.ripples) {
                 if (!ripple.isActive) continue;
                 const life = ripple.life;
@@ -807,23 +789,31 @@
                 const alpha = life * baseBright * PARAMS.rippleAlphaBase;
                 if (alpha < 0.001) continue;
 
-                const layers = Math.min(4, 2 + Math.floor(strength / 5));
+                const layers = Math.min(5, 3 + Math.floor(strength / 4)); // 增加层数
                 for (let layer = 0; layer < layers; layer++) {
                     const offset = layer * 3 * (1 - life * 0.2);
                     const rad = r + offset;
-                    if (rad > ripple.maxRadius + 15) continue;
-                    const segments = 40 + Math.floor(rad * 0.3);
-                    const distortion = PARAMS.waveDistortion * ripple.distortionAmp * (0.5 + 0.5 * Math.sin(life * 2));
+                    if (rad > ripple.maxRadius + 20) continue;
+                    const segments = 50 + Math.floor(rad * 0.4);
+                    // 每一层的扭曲参数都不同，制造更丰富的波浪
+                    const layerWave = ripple.wavePhase + layer * 0.8 + life * 0.5;
+                    const distortion = PARAMS.waveDistortion * ripple.distortionAmp *
+                        (0.4 + 0.6 * Math.sin(life * 2 + layer * 0.3)) *
+                        (1 + 0.3 * Math.sin(rad * 0.05));
+
                     ctx.beginPath();
                     for (let k = 0; k <= segments; k++) {
                         const angle = (k / segments) * Math.PI * 2;
-                        const wave1 = Math.sin(angle * PARAMS.waveFrequency + STATE.frame * 0.015 + ripple.distortionSeed) *
-                            distortion * 2;
-                        const wave2 = Math.cos(angle * 1.3 + STATE.frame * 0.01 + ripple.distortionSeed * 0.7) * distortion *
-                            1.2;
-                        const wave3 = Math.sin(angle * 2.7 + STATE.frame * 0.008 + ripple.distortionSeed * 1.3) * distortion *
-                            0.8;
-                        const offsetR = (wave1 + wave2 + wave3) * 0.15;
+                        // 多频率波浪叠加，产生不规则的类圆形
+                        const wave1 = Math.sin(angle * PARAMS.waveFrequency + STATE.frame * 0.015 + ripple.distortionSeed +
+                            layerWave) * distortion * 1.8;
+                        const wave2 = Math.cos(angle * 2.3 + STATE.frame * 0.01 + ripple.distortionSeed * 0.7 + layerWave *
+                            0.5) * distortion * 1.2;
+                        const wave3 = Math.sin(angle * 4.7 + STATE.frame * 0.008 + ripple.distortionSeed * 1.3 + layerWave *
+                            0.3) * distortion * 0.7;
+                        const wave4 = Math.cos(angle * 1.1 + STATE.frame * 0.012 + ripple.distortionSeed * 0.4 + layerWave *
+                            0.7) * distortion * 0.5;
+                        const offsetR = (wave1 + wave2 + wave3 + wave4) * 0.2;
                         const finalR = Math.max(0, rad + offsetR);
                         const px = ripple.x + finalR * Math.cos(angle);
                         const py = ripple.y + finalR * Math.sin(angle);
@@ -831,11 +821,13 @@
                         else ctx.lineTo(px, py);
                     }
                     ctx.closePath();
-                    const layerAlpha = alpha * (1 - layer / layers) * (0.7 + 0.3 * Math.sin(life * 3 + layer));
-                    ctx.strokeStyle = `rgba(220,225,235,${Math.min(layerAlpha, 0.15)})`;
-                    ctx.lineWidth = 0.3 + (1 - life) * 0.6 + strength * 0.015;
+                    const layerAlpha = alpha * (1 - layer / layers) * (0.6 + 0.4 * Math.sin(life * 2.5 + layer));
+                    ctx.strokeStyle = `rgba(220,225,235,${Math.min(layerAlpha, 0.18)})`;
+                    ctx.lineWidth = 0.2 + (1 - life) * 0.5 + strength * 0.012;
                     ctx.stroke();
                 }
+
+                // 中心光点（同样带有波浪感）
                 if (life > 0.3) {
                     const centerAlpha = life * Math.min(1, strength / 20) * 0.10;
                     const cSize = 1.5 + (1 - life) * 3 + strength * 0.04;
@@ -848,9 +840,7 @@
                 }
             }
 
-            // ============================================================
-            //  5. 绘制节点（灰阶丰富）
-            // ============================================================
+            // ---- 绘制节点 ----
             for (let node of STATE.nodes) {
                 const b = node.brightness;
                 const baseMult = node.baseBrightness || 0.5;
@@ -887,9 +877,7 @@
                 }
             }
 
-            // ============================================================
-            //  6. 鼠标触发节点涟漪
-            // ============================================================
+            // ---- 鼠标触发涟漪（带冷却） ----
             if (inside) {
                 for (let node of STATE.nodes) {
                     const dx = mx - node.x;
@@ -908,9 +896,7 @@
                 }
             }
 
-            // ============================================================
-            //  7. 鼠标光圈（灰阶适应）
-            // ============================================================
+            // ---- 鼠标光圈 ----
             if (inside && mx > 0 && mx < W && my > 0 && my < H) {
                 const mainR = PARAMS.lightRadius;
 
@@ -990,9 +976,7 @@
                 ctx.stroke();
             }
 
-            // ============================================================
-            //  8. 绘制标题（最上层）
-            // ============================================================
+            // ---- 绘制标题 ----
             drawTitle();
 
             // ---- 角落信息 ----
@@ -1017,8 +1001,8 @@
         }, { once: true });
 
         console.log('✦ Ripple — 光 · 涟漪');
-        console.log('✦ 花体字标题 (透明质感) · 节点: 150');
-        console.log('✦ 深蓝灰背景 · 丰富灰阶 · 寂静感');
+        console.log('✦ 手写花体标题 · 节点涟漪冷却: 500ms');
+        console.log('✦ 增强波浪感 · 不规则类圆形涟漪');
     </script>
 </body>
 </html>
