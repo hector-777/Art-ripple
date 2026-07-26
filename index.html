@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>光 · 涟漪 — Ripple</title>
 
-    <!-- Google Fonts: 手写花体 -->
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200;14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
 
     <style>
+        /* ... 样式保持不变 ... */
         * {
             margin: 0;
             padding: 0;
@@ -127,15 +127,26 @@
             mouseY: -9999,
             mouseInside: false,
             frame: 0,
-            audioCtx: null,
-            bellTimer: null,
-            autoRippleTimer: null,
             isMobile: false,
-            // 鼠标速度跟踪（用于涟漪椭圆方向）
             mouseVX: 0,
             mouseVY: 0,
             prevMouseX: -9999,
             prevMouseY: -9999,
+
+            audioCtx: null,
+            bgmBuffer: null,
+            waterBuffer: null,
+            bgmSource: null,
+            bgmGain: null,
+            waterSource: null,
+            waterGain: null,
+            waterLooping: false,
+            waterFadeTimer: null,
+            audioReady: false,
+            mouseActive: false,
+            mouseStopTimer: null,
+
+            autoRippleTimer: null,
         };
 
         // ============================================================
@@ -157,7 +168,7 @@
         }
 
         // ============================================================
-        //  参数（已调整）
+        //  参数
         // ============================================================
         const PARAMS = {
             nodeCountDesktop: 150,
@@ -165,7 +176,7 @@
 
             lightRadius: 170,
             nodeTriggerDist: 75,
-            rippleSpeedBase: 0.38, // 稍微减慢涟漪扩散速度
+            rippleSpeedBase: 0.38,
             rippleDecay: 0.27,
             minStrength: 1.0,
             nodeBaseBrightness: 0.012,
@@ -176,28 +187,33 @@
             rippleAlphaBase: 0.24,
             rippleCooldown: 500,
 
-            // 波浪参数
             waveDistortion: 1.4,
             waveFrequency: 4.0,
 
-            floatAmplitude: 0.8,
+            floatAmplitude: 2.0,
             floatSpeed: 0.004,
 
-            // 鼠标推开：幅度减少，回弹更慢
             pushRadius: 100,
-            pushStrength: 6, // 从 18 → 6
-            springConstant: 0.012, // 从 0.025 → 0.012（更慢）
-            damping: 0.985, // 从 0.96 → 0.985（阻力更大）
+            pushStrength: 6,
+            springConstant: 0.012,
+            damping: 0.985,
 
-            autoRippleIntervalMin: 10000,
+            // ===== 自动涟漪（简化为一组，缓慢呼吸） =====
+            autoRippleIntervalMin: 8000,
             autoRippleIntervalMax: 15000,
+            autoRippleCountMin: 2,
+            autoRippleCountMax: 4,
+            autoRippleBrightness: 15,
+
+            manualRippleBrightness: 10,
+
+            autoRippleHighlightDuration: 500,
 
             mouseGlowIntensity: 0.10,
             mouseMidGlow: 0.06,
             mouseCoreGlow: 0.25,
             mouseInnerGlow: 0.10,
 
-            // ===== 标题参数（首字母大写） =====
             titleText: 'Ripple',
             titleSize: 0.075,
             titleY: 0.18,
@@ -210,8 +226,14 @@
             textLayerGlow: 8,
             textLayerGlowAlpha: 0.08,
 
-            // 涟漪椭圆拉伸强度
             rippleStretchStrength: 0.6,
+
+            // ===== 音频参数 =====
+            bgmVolume: 0.5,
+            waterVolume: 0.4,
+            waterFadeIn: 0.3,
+            waterFadeOut: 0.3,
+            waterStopDelay: 500,
         };
 
         // ============================================================
@@ -274,6 +296,7 @@
                             vy: 0,
                             baseBrightness: brightBase,
                             lastRippleTime: 0,
+                            highlightUntil: 0,
                         });
                         idx++;
                     }
@@ -301,7 +324,6 @@
             const fontFamily = '"Great Vibes", "Alex Brush", "Tangerine", "Georgia", serif';
             ctx.font = `${fontSize}px ${fontFamily}`;
 
-            // 底层光晕
             ctx.save();
             ctx.shadowColor = `rgba(220,225,235,${PARAMS.glowLayerAlpha * 0.3})`;
             ctx.shadowBlur = PARAMS.glowLayerBlur * 1.5;
@@ -326,7 +348,6 @@
             ctx.fillText(text, cx, cy + 2);
             ctx.restore();
 
-            // 字母独立光晕圈
             for (let i = 0; i < text.length; i++) {
                 const char = text[i];
                 const charOffset = (i - (text.length - 1) / 2) * fontSize * (0.75 + PARAMS.titleLetterSpacing);
@@ -350,7 +371,6 @@
                 }
             }
 
-            // 上层：手写花体字（透明质感）
             ctx.save();
             ctx.shadowColor = `rgba(220,225,235,${PARAMS.textLayerGlowAlpha})`;
             ctx.shadowBlur = PARAMS.textLayerGlow;
@@ -381,7 +401,6 @@
             ctx.fillText(text, cx - 1, cy);
             ctx.restore();
 
-            // 装饰
             for (let i = 0; i < text.length - 1; i++) {
                 const charOffset1 = (i - (text.length - 1) / 2) * fontSize * (0.75 + PARAMS.titleLetterSpacing);
                 const charOffset2 = (i + 1 - (text.length - 1) / 2) * fontSize * (0.75 + PARAMS.titleLetterSpacing);
@@ -430,83 +449,200 @@
         }
 
         // ============================================================
-        //  音频系统
+        //  音频系统（纯音频文件）
         // ============================================================
-        function initAudio() {
-            if (STATE.audioCtx) return;
-            try {
-                const ctx = new(window.AudioContext || window.webkitAudioContext)();
-                STATE.audioCtx = ctx;
 
-                const drone = ctx.createOscillator();
-                drone.type = 'sine';
-                drone.frequency.value = 55;
-                const droneGain = ctx.createGain();
-                droneGain.gain.value = 0.012;
-                drone.connect(droneGain);
-                droneGain.connect(ctx.destination);
-                drone.start();
-
-                const lfo = ctx.createOscillator();
-                lfo.frequency.value = 0.15;
-                const lfoGain = ctx.createGain();
-                lfoGain.gain.value = 5;
-                lfo.connect(lfoGain);
-                lfoGain.connect(drone.frequency);
-                lfo.start();
-
-                scheduleBell();
-                console.log('✦ 环境音已启动');
-            } catch (e) { console.warn('音频初始化失败:', e); }
-        }
-
-        function scheduleBell() {
-            if (!STATE.audioCtx) return;
-            const delay = 3000 + Math.random() * 8000;
-            STATE.bellTimer = setTimeout(() => {
-                playBell();
-                scheduleBell();
-            }, delay);
-        }
-
-        function playBell() {
+        async function loadAudioFiles() {
             try {
                 const ctx = STATE.audioCtx;
-                if (!ctx) return;
-                const freqs = [523, 587, 659, 784, 880, 988];
-                const freq = freqs[Math.floor(Math.random() * freqs.length)] * (0.98 + Math.random() * 0.04);
-                const osc = ctx.createOscillator();
-                osc.type = 'sine';
-                osc.frequency.value = freq;
-                const osc2 = ctx.createOscillator();
-                osc2.type = 'sine';
-                osc2.frequency.value = freq * 2.0;
-                osc2.gain.value = 0.3;
+                if (!ctx) return false;
+
+                const bgmResp = await fetch('bgm.mp3');
+                const bgmArrayBuffer = await bgmResp.arrayBuffer();
+                STATE.bgmBuffer = await ctx.decodeAudioData(bgmArrayBuffer);
+                console.log('✦ 背景音乐加载成功');
+
+                const waterResp = await fetch('water.mp3');
+                const waterArrayBuffer = await waterResp.arrayBuffer();
+                STATE.waterBuffer = await ctx.decodeAudioData(waterArrayBuffer);
+                console.log('✦ 水声加载成功');
+
+                return true;
+            } catch (e) {
+                console.warn('✦ 音频文件加载失败，请确保 bgm.mp3 和 water.mp3 在根目录:', e);
+                return false;
+            }
+        }
+
+        async function initAudio() {
+            if (STATE.audioReady) return;
+
+            try {
+                if (!STATE.audioCtx) {
+                    STATE.audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                }
+
+                if (STATE.audioCtx.state === 'suspended') {
+                    await STATE.audioCtx.resume();
+                }
+
+                if (STATE.audioCtx.state !== 'running') {
+                    console.warn('✦ AudioContext 未能启动');
+                    return;
+                }
+
+                const loaded = await loadAudioFiles();
+                if (!loaded) {
+                    console.warn('✦ 音频文件加载失败，跳过音频初始化');
+                    return;
+                }
+
+                playBGM();
+                STATE.audioReady = true;
+                console.log('✦ 音频系统初始化完成 ✓');
+
+            } catch (e) {
+                console.warn('✦ 音频初始化失败:', e);
+            }
+        }
+
+        function playBGM() {
+            try {
+                const ctx = STATE.audioCtx;
+                if (!ctx || !STATE.bgmBuffer) return;
+
+                if (STATE.bgmSource) {
+                    try { STATE.bgmSource.stop(); } catch (e) {}
+                }
+
+                const source = ctx.createBufferSource();
+                source.buffer = STATE.bgmBuffer;
+                source.loop = true;
+
                 const gain = ctx.createGain();
-                gain.gain.setValueAtTime(0.03, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5 + Math.random() * 1.0);
-                const gain2 = ctx.createGain();
-                gain2.gain.setValueAtTime(0.01, ctx.currentTime);
-                gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.0 + Math.random() * 0.8);
-                osc.connect(gain);
+                gain.gain.setValueAtTime(PARAMS.bgmVolume, ctx.currentTime);
+
+                source.connect(gain);
                 gain.connect(ctx.destination);
-                osc2.connect(gain2);
-                gain2.connect(ctx.destination);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 1.8 + Math.random() * 1.2);
-                osc2.start(ctx.currentTime + 0.05);
-                osc2.stop(ctx.currentTime + 1.5 + Math.random() * 1.0);
-            } catch (e) {}
+
+                source.start(ctx.currentTime);
+
+                STATE.bgmSource = source;
+                STATE.bgmGain = gain;
+
+                console.log('✦ 背景音乐已开始播放');
+            } catch (e) {
+                console.warn('✦ 背景音乐播放失败:', e);
+            }
+        }
+
+        function startWaterSound() {
+            try {
+                const ctx = STATE.audioCtx;
+                if (!ctx || !STATE.waterBuffer) return;
+
+                if (STATE.waterLooping) return;
+
+                if (STATE.mouseStopTimer) {
+                    clearTimeout(STATE.mouseStopTimer);
+                    STATE.mouseStopTimer = null;
+                }
+
+                const source = ctx.createBufferSource();
+                source.buffer = STATE.waterBuffer;
+                source.loop = true;
+
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(0, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(PARAMS.waterVolume, ctx.currentTime + PARAMS.waterFadeIn);
+
+                source.connect(gain);
+                gain.connect(ctx.destination);
+
+                source.start(ctx.currentTime);
+
+                STATE.waterSource = source;
+                STATE.waterGain = gain;
+                STATE.waterLooping = true;
+
+                console.log('✦ 水声开始 (渐入)');
+            } catch (e) {
+                console.warn('✦ 水声播放失败:', e);
+            }
+        }
+
+        function stopWaterSound(immediate = false) {
+            try {
+                if (!STATE.waterLooping || !STATE.waterGain) {
+                    STATE.waterLooping = false;
+                    return;
+                }
+
+                const ctx = STATE.audioCtx;
+                if (!ctx) return;
+
+                if (immediate) {
+                    STATE.waterGain.gain.setValueAtTime(0, ctx.currentTime);
+                    STATE.waterLooping = false;
+                    if (STATE.waterSource) {
+                        try { STATE.waterSource.stop(); } catch (e) {}
+                        STATE.waterSource = null;
+                    }
+                    STATE.waterGain = null;
+                    console.log('✦ 水声立即停止');
+                    return;
+                }
+
+                const currentGain = STATE.waterGain.gain.value;
+                STATE.waterGain.gain.setValueAtTime(currentGain, ctx.currentTime);
+                STATE.waterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + PARAMS.waterFadeOut);
+
+                setTimeout(() => {
+                    if (STATE.waterSource) {
+                        try { STATE.waterSource.stop(); } catch (e) {}
+                        STATE.waterSource = null;
+                    }
+                    STATE.waterGain = null;
+                    STATE.waterLooping = false;
+                    console.log('✦ 水声已淡出');
+                }, PARAMS.waterFadeOut * 1000 + 100);
+
+            } catch (e) {
+                console.warn('✦ 水声停止失败:', e);
+                STATE.waterLooping = false;
+            }
+        }
+
+        function handleMouseMove() {
+            if (!STATE.mouseActive) {
+                STATE.mouseActive = true;
+                startWaterSound();
+            }
+
+            if (STATE.mouseStopTimer) {
+                clearTimeout(STATE.mouseStopTimer);
+                STATE.mouseStopTimer = null;
+            }
+        }
+
+        function handleMouseStop() {
+            if (STATE.mouseStopTimer) {
+                clearTimeout(STATE.mouseStopTimer);
+            }
+            STATE.mouseStopTimer = setTimeout(() => {
+                STATE.mouseActive = false;
+                stopWaterSound(false);
+                STATE.mouseStopTimer = null;
+            }, PARAMS.waterStopDelay);
         }
 
         // ============================================================
         //  涟漪系统
         // ============================================================
-        function createRipple(x, y, strength, maxRadiusOverride, vx, vy) {
-            const speed = PARAMS.rippleSpeedBase + strength * 0.006 + (Math.random() - 0.5) * 0.08;
-            const maxRadius = maxRadiusOverride || (45 + strength * 2.0 + Math.random() * 20);
+        function createRipple(x, y, brightness, maxRadiusOverride, vx, vy, isAuto) {
+            const speed = PARAMS.rippleSpeedBase + brightness * 0.015 + (Math.random() - 0.5) * 0.06;
+            const maxRadius = maxRadiusOverride || (40 + brightness * 2.5 + Math.random() * 20);
 
-            // 计算椭圆拉伸方向（基于鼠标速度）
             const speedVal = Math.sqrt(vx * vx + vy * vy);
             let stretchAngle = 0,
                 stretchAmount = 0;
@@ -522,7 +658,7 @@
                 maxRadius,
                 life: 1.0,
                 speed,
-                strength,
+                brightness,
                 triggeredSet: new Set(),
                 isActive: true,
                 phaseOffset: Math.random() * Math.PI * 2,
@@ -530,23 +666,22 @@
                 distortionAmp: 0.4 + Math.random() * 0.8,
                 randomAngle: Math.random() * Math.PI * 2,
                 wavePhase: Math.random() * Math.PI * 2,
-                // 椭圆拉伸参数
                 stretchAngle: stretchAngle,
                 stretchAmount: stretchAmount,
+                isAuto: isAuto || false,
             });
         }
 
-        function triggerNodeRipple(node, strength, vx, vy) {
+        function triggerNodeRipple(node, brightness, vx, vy) {
             const now = performance.now();
             if (node.lastRippleTime && (now - node.lastRippleTime) < PARAMS.rippleCooldown) {
                 return;
             }
             node.lastRippleTime = now;
 
-            const s = strength * (0.7 + Math.random() * 0.6);
-            const maxR = 30 + s * 1.8 + Math.random() * 15;
+            const s = brightness * (0.7 + Math.random() * 0.6);
+            const maxR = 30 + s * 2.0 + Math.random() * 15;
 
-            // 计算椭圆拉伸方向
             const speedVal = Math.sqrt(vx * vx + vy * vy);
             let stretchAngle = 0,
                 stretchAmount = 0;
@@ -561,8 +696,8 @@
                 radius: 0,
                 maxRadius: maxR,
                 life: 1.0,
-                speed: PARAMS.rippleSpeedBase + s * 0.005 + (Math.random() - 0.5) * 0.05,
-                strength: s,
+                speed: PARAMS.rippleSpeedBase + s * 0.008 + (Math.random() - 0.5) * 0.05,
+                brightness: s,
                 triggeredSet: new Set([node.id]),
                 isActive: true,
                 phaseOffset: Math.random() * Math.PI * 2,
@@ -573,6 +708,7 @@
                 wavePhase: Math.random() * Math.PI * 2,
                 stretchAngle: stretchAngle,
                 stretchAmount: stretchAmount,
+                isAuto: false,
             });
         }
 
@@ -588,9 +724,9 @@
                     toRemove.push(i);
                     continue;
                 }
-                if (ripple.strength < PARAMS.minStrength) continue;
-                const newStrength = ripple.strength * PARAMS.rippleDecay * (0.9 + Math.random() * 0.2);
-                if (newStrength < PARAMS.minStrength) continue;
+                if (ripple.brightness < PARAMS.minStrength) continue;
+                const newBrightness = ripple.brightness * PARAMS.rippleDecay * (0.9 + Math.random() * 0.2);
+                if (newBrightness < PARAMS.minStrength) continue;
                 for (let node of STATE.nodes) {
                     if (ripple.triggeredSet.has(node.id)) continue;
                     const dx = node.x - ripple.x;
@@ -599,11 +735,11 @@
                     const threshold = ripple.radius + 2 + (Math.random() - 0.5) * 4;
                     if (dist < threshold) {
                         ripple.triggeredSet.add(node.id);
-                        // 次级涟漪继承父级的方向
                         setTimeout(() => {
-                            triggerNodeRipple(node, newStrength, ripple.stretchAngle ? Math.cos(ripple
-                                .stretchAngle) * 1 : 0, ripple.stretchAngle ? Math.sin(ripple
-                                .stretchAngle) * 1 : 0);
+                            triggerNodeRipple(node, newBrightness,
+                                ripple.stretchAngle ? Math.cos(ripple.stretchAngle) * 1 : 0,
+                                ripple.stretchAngle ? Math.sin(ripple.stretchAngle) * 1 : 0
+                            );
                         }, Math.random() * 80);
                     }
                 }
@@ -614,7 +750,7 @@
         }
 
         // ============================================================
-        //  自动涟漪
+        //  自动涟漪（简化为一组，缓慢呼吸）
         // ============================================================
         function scheduleAutoRipple() {
             const delay = PARAMS.autoRippleIntervalMin +
@@ -626,26 +762,107 @@
         }
 
         function triggerAutoRipple() {
-            const shuffled = [...STATE.nodes].sort(() => Math.random() - 0.5);
-            const count = 1 + Math.floor(Math.random() * 2);
-            const selected = shuffled.slice(0, count);
+            const candidates = [...STATE.nodes];
+            candidates.sort((a, b) => b.baseBrightness - a.baseBrightness);
+
+            const count = PARAMS.autoRippleCountMin +
+                Math.floor(Math.random() * (PARAMS.autoRippleCountMax - PARAMS.autoRippleCountMin + 1));
+            const selected = [];
+
+            const pool = candidates.slice(0, Math.min(candidates.length, Math.floor(candidates.length * 0.4)));
+            const shuffled = pool.sort(() => Math.random() - 0.5);
+            for (let i = 0; i < Math.min(count, shuffled.length); i++) {
+                selected.push(shuffled[i]);
+            }
 
             for (let node of selected) {
-                node.targetBrightness = 0.9 + Math.random() * 0.1;
+                const brightFactor = 0.7 + 0.6 * node.baseBrightness;
+                const brightness = PARAMS.autoRippleBrightness * brightFactor;
+
+                node.highlightUntil = performance.now() + PARAMS.autoRippleHighlightDuration;
+                node.targetBrightness = 1.0;
+
                 setTimeout(() => {
                     node.targetBrightness = 0.3;
-                }, 300);
+                }, PARAMS.autoRippleHighlightDuration);
 
-                const strength = 8 + Math.random() * 6;
                 const now = performance.now();
                 if (!node.lastRippleTime || (now - node.lastRippleTime) >= PARAMS.rippleCooldown) {
                     node.lastRippleTime = now;
-                    // 自动涟漪没有特定方向，随机方向
                     const angle = Math.random() * Math.PI * 2;
-                    const randomVx = Math.cos(angle) * 0.5;
-                    const randomVy = Math.sin(angle) * 0.5;
-                    createRipple(node.x, node.y, strength, undefined, randomVx, randomVy);
-                    playBell();
+                    createRipple(node.x, node.y, brightness, undefined,
+                        Math.cos(angle) * 0.3, Math.sin(angle) * 0.3,
+                        true
+                    );
+                }
+            }
+        }
+
+        // ============================================================
+        //  绘制涟漪
+        // ============================================================
+        function drawRipples() {
+            for (let ripple of STATE.ripples) {
+                if (!ripple.isActive) continue;
+                const life = ripple.life;
+                const r = ripple.radius;
+                const brightness = ripple.brightness;
+                const baseBright = Math.min(1, brightness / 10) * 1.4;
+                const alpha = life * baseBright * PARAMS.rippleAlphaBase;
+                if (alpha < 0.001) continue;
+
+                const stretchAngle = ripple.stretchAngle || 0;
+                const stretchAmount = ripple.stretchAmount || 0;
+
+                const layers = Math.min(5, 3 + Math.floor(brightness / 4));
+                for (let layer = 0; layer < layers; layer++) {
+                    const offset = layer * 3 * (1 - life * 0.2);
+                    const rad = r + offset;
+                    if (rad > ripple.maxRadius + 20) continue;
+                    const segments = 50 + Math.floor(rad * 0.4);
+                    const layerWave = ripple.wavePhase + layer * 0.8 + life * 0.5;
+                    const distortion = PARAMS.waveDistortion * ripple.distortionAmp *
+                        (0.4 + 0.6 * Math.sin(life * 2 + layer * 0.3)) *
+                        (1 + 0.3 * Math.sin(rad * 0.05));
+
+                    ctx.beginPath();
+                    for (let k = 0; k <= segments; k++) {
+                        const angle = (k / segments) * Math.PI * 2;
+                        const wave1 = Math.sin(angle * PARAMS.waveFrequency + STATE.frame * 0.015 + ripple.distortionSeed +
+                            layerWave) * distortion * 1.8;
+                        const wave2 = Math.cos(angle * 2.3 + STATE.frame * 0.01 + ripple.distortionSeed * 0.7 + layerWave *
+                            0.5) * distortion * 1.2;
+                        const wave3 = Math.sin(angle * 4.7 + STATE.frame * 0.008 + ripple.distortionSeed * 1.3 + layerWave *
+                            0.3) * distortion * 0.7;
+                        const wave4 = Math.cos(angle * 1.1 + STATE.frame * 0.012 + ripple.distortionSeed * 0.4 + layerWave *
+                            0.7) * distortion * 0.5;
+                        const offsetR = (wave1 + wave2 + wave3 + wave4) * 0.2;
+                        const finalR = Math.max(0, rad + offsetR);
+
+                        const stretchedX = finalR * Math.cos(angle) * (1 + stretchAmount * 0.5 * Math.cos(stretchAngle));
+                        const stretchedY = finalR * Math.sin(angle) * (1 + stretchAmount * 0.5 * Math.sin(stretchAngle));
+                        const px = ripple.x + stretchedX;
+                        const py = ripple.y + stretchedY;
+
+                        if (k === 0) ctx.moveTo(px, py);
+                        else ctx.lineTo(px, py);
+                    }
+                    ctx.closePath();
+                    const layerAlpha = alpha * (1 - layer / layers) * (0.6 + 0.4 * Math.sin(life * 2.5 + layer));
+                    ctx.strokeStyle = `rgba(220,225,235,${Math.min(layerAlpha, 0.18)})`;
+                    ctx.lineWidth = 0.2 + (1 - life) * 0.5 + brightness * 0.015;
+                    ctx.stroke();
+                }
+
+                if (life > 0.3) {
+                    const centerAlpha = life * Math.min(1, brightness / 15) * 0.12;
+                    const cSize = 1.5 + (1 - life) * 3 + brightness * 0.04;
+                    const shiftX = Math.sin(STATE.frame * 0.02 + ripple.distortionSeed) * 0.5;
+                    const shiftY = Math.cos(STATE.frame * 0.018 + ripple.distortionSeed * 0.7) * 0.5;
+                    ctx.beginPath();
+                    ctx.arc(ripple.x + shiftX, ripple.y + shiftY, cSize, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(220,225,235,${Math.min(centerAlpha, 0.18)})`;
+                    ctx.fill();
                 }
             }
         }
@@ -672,12 +889,9 @@
             const newX = pos.x;
             const newY = pos.y;
 
-            // 计算鼠标速度（带平滑）
             if (STATE.prevMouseX !== -9999) {
-                const dt = 1;
-                const rawVx = (newX - STATE.prevMouseX) / dt;
-                const rawVy = (newY - STATE.prevMouseY) / dt;
-                // 平滑速度
+                const rawVx = newX - STATE.prevMouseX;
+                const rawVy = newY - STATE.prevMouseY;
                 STATE.mouseVX = STATE.mouseVX * 0.6 + rawVx * 0.4;
                 STATE.mouseVY = STATE.mouseVY * 0.6 + rawVy * 0.4;
             }
@@ -687,23 +901,29 @@
             STATE.mouseX = newX;
             STATE.mouseY = newY;
             STATE.mouseInside = true;
-            if (!STATE.audioCtx) initAudio();
+
+            if (!STATE.audioReady) {
+                initAudio();
+            }
+            handleMouseMove();
         }
 
         function onLeave() {
             STATE.mouseInside = false;
             STATE.mouseVX = 0;
             STATE.mouseVY = 0;
+            handleMouseStop();
         }
 
         function onTap(e) {
             const pos = getPos(e);
-            const strength = 20 + Math.random() * 10;
-            const maxR = 100 + Math.random() * 60;
-            // 点击涟漪无特定方向，随机小幅度
+            const brightness = PARAMS.manualRippleBrightness + Math.random() * 4;
+            const maxR = 80 + brightness * 3 + Math.random() * 40;
             const angle = Math.random() * Math.PI * 2;
-            createRipple(pos.x, pos.y, strength, maxR, Math.cos(angle) * 0.3, Math.sin(angle) * 0.3);
-            playBell();
+            createRipple(pos.x, pos.y, brightness, maxR, Math.cos(angle) * 0.3, Math.sin(angle) * 0.3, false);
+            if (!STATE.audioReady) {
+                initAudio();
+            }
         }
 
         window.addEventListener('mousemove', onMove);
@@ -738,81 +958,6 @@
         window.addEventListener('resize', resize);
 
         // ============================================================
-        //  绘制涟漪（带椭圆拉伸）
-        // ============================================================
-        function drawRipples() {
-            for (let ripple of STATE.ripples) {
-                if (!ripple.isActive) continue;
-                const life = ripple.life;
-                const r = ripple.radius;
-                const strength = ripple.strength;
-                const baseBright = Math.min(1, strength / 12) * 1.4;
-                const alpha = life * baseBright * PARAMS.rippleAlphaBase;
-                if (alpha < 0.001) continue;
-
-                // 椭圆拉伸参数
-                const stretchAngle = ripple.stretchAngle || 0;
-                const stretchAmount = ripple.stretchAmount || 0;
-                const scaleX = 1 + stretchAmount * Math.cos(stretchAngle);
-                const scaleY = 1 + stretchAmount * Math.sin(stretchAngle);
-
-                const layers = Math.min(5, 3 + Math.floor(strength / 4));
-                for (let layer = 0; layer < layers; layer++) {
-                    const offset = layer * 3 * (1 - life * 0.2);
-                    const rad = r + offset;
-                    if (rad > ripple.maxRadius + 20) continue;
-                    const segments = 50 + Math.floor(rad * 0.4);
-                    const layerWave = ripple.wavePhase + layer * 0.8 + life * 0.5;
-                    const distortion = PARAMS.waveDistortion * ripple.distortionAmp *
-                        (0.4 + 0.6 * Math.sin(life * 2 + layer * 0.3)) *
-                        (1 + 0.3 * Math.sin(rad * 0.05));
-
-                    ctx.beginPath();
-                    for (let k = 0; k <= segments; k++) {
-                        const angle = (k / segments) * Math.PI * 2;
-                        // 多频率波浪叠加
-                        const wave1 = Math.sin(angle * PARAMS.waveFrequency + STATE.frame * 0.015 + ripple.distortionSeed +
-                            layerWave) * distortion * 1.8;
-                        const wave2 = Math.cos(angle * 2.3 + STATE.frame * 0.01 + ripple.distortionSeed * 0.7 + layerWave *
-                            0.5) * distortion * 1.2;
-                        const wave3 = Math.sin(angle * 4.7 + STATE.frame * 0.008 + ripple.distortionSeed * 1.3 + layerWave *
-                            0.3) * distortion * 0.7;
-                        const wave4 = Math.cos(angle * 1.1 + STATE.frame * 0.012 + ripple.distortionSeed * 0.4 + layerWave *
-                            0.7) * distortion * 0.5;
-                        const offsetR = (wave1 + wave2 + wave3 + wave4) * 0.2;
-                        const finalR = Math.max(0, rad + offsetR);
-
-                        // 应用椭圆拉伸
-                        const stretchedX = finalR * Math.cos(angle) * (1 + stretchAmount * 0.5 * Math.cos(stretchAngle));
-                        const stretchedY = finalR * Math.sin(angle) * (1 + stretchAmount * 0.5 * Math.sin(stretchAngle));
-                        const px = ripple.x + stretchedX;
-                        const py = ripple.y + stretchedY;
-
-                        if (k === 0) ctx.moveTo(px, py);
-                        else ctx.lineTo(px, py);
-                    }
-                    ctx.closePath();
-                    const layerAlpha = alpha * (1 - layer / layers) * (0.6 + 0.4 * Math.sin(life * 2.5 + layer));
-                    ctx.strokeStyle = `rgba(220,225,235,${Math.min(layerAlpha, 0.18)})`;
-                    ctx.lineWidth = 0.2 + (1 - life) * 0.5 + strength * 0.012;
-                    ctx.stroke();
-                }
-
-                // 中心光点
-                if (life > 0.3) {
-                    const centerAlpha = life * Math.min(1, strength / 20) * 0.10;
-                    const cSize = 1.5 + (1 - life) * 3 + strength * 0.04;
-                    const shiftX = Math.sin(STATE.frame * 0.02 + ripple.distortionSeed) * 0.5;
-                    const shiftY = Math.cos(STATE.frame * 0.018 + ripple.distortionSeed * 0.7) * 0.5;
-                    ctx.beginPath();
-                    ctx.arc(ripple.x + shiftX, ripple.y + shiftY, cSize, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(220,225,235,${Math.min(centerAlpha, 0.15)})`;
-                    ctx.fill();
-                }
-            }
-        }
-
-        // ============================================================
         //  渲染循环
         // ============================================================
         function draw() {
@@ -825,7 +970,8 @@
             const my = STATE.mouseY;
             const inside = STATE.mouseInside;
 
-            // ---- 更新节点 ----
+            const now = performance.now();
+
             for (let node of STATE.nodes) {
                 const floatOffsetX = Math.sin(STATE.frame * PARAMS.floatSpeed + node.phase) * PARAMS.floatAmplitude;
                 const floatOffsetY = Math.cos(STATE.frame * PARAMS.floatSpeed * 0.8 + node.phase * 0.7) * PARAMS
@@ -877,15 +1023,17 @@
                 const baseMult = node.baseBrightness || 0.5;
                 targetBright = targetBright * (0.3 + 0.7 * baseMult);
 
+                if (node.highlightUntil && now < node.highlightUntil) {
+                    targetBright = Math.max(targetBright, 1.0);
+                }
+
                 node.targetBrightness = Math.min(targetBright, 1.0);
                 node.brightness += (node.targetBrightness - node.brightness) * 0.05;
                 node.phase += 0.003;
             }
 
-            // ---- 更新涟漪 ----
             updateRipples();
 
-            // ---- 绘制普通连线 ----
             const connectDist = Math.min(W, H) * 0.10;
             for (let i = 0; i < STATE.nodes.length; i++) {
                 const n1 = STATE.nodes[i];
@@ -910,10 +1058,8 @@
                 }
             }
 
-            // ---- 绘制涟漪 ----
             drawRipples();
 
-            // ---- 绘制节点 ----
             for (let node of STATE.nodes) {
                 const b = node.brightness;
                 const baseMult = node.baseBrightness || 0.5;
@@ -921,13 +1067,16 @@
                 const size = 0.6 + finalBright * 3.0;
                 const alpha = Math.min(finalBright * 0.45, 0.35);
 
+                const isHighlighted = node.highlightUntil && now < node.highlightUntil;
+                const glowMult = isHighlighted ? 2.5 : 1.0;
+
                 if (finalBright > 0.02) {
-                    const glowR = 4 + finalBright * 25;
+                    const glowR = (4 + finalBright * 25) * glowMult;
                     const distX = Math.sin(STATE.frame * 0.005 + node.waveOffset) * 0.3;
                     const distY = Math.cos(STATE.frame * 0.007 + node.waveOffset * 0.8) * 0.3;
                     const grad = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowR);
-                    grad.addColorStop(0, `rgba(200,210,225,${finalBright * 0.05})`);
-                    grad.addColorStop(0.5, `rgba(200,210,225,${finalBright * 0.025})`);
+                    grad.addColorStop(0, `rgba(220,230,240,${finalBright * 0.08 * glowMult})`);
+                    grad.addColorStop(0.5, `rgba(200,210,225,${finalBright * 0.04 * glowMult})`);
                     grad.addColorStop(1, 'rgba(200,210,225,0)');
                     ctx.fillStyle = grad;
                     ctx.beginPath();
@@ -945,12 +1094,11 @@
                 if (finalBright > 0.2) {
                     ctx.beginPath();
                     ctx.arc(node.x - size * 0.2, node.y - size * 0.2, size * 0.25, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(230,235,240,${finalBright * 0.10})`;
+                    ctx.fillStyle = `rgba(230,235,240,${finalBright * 0.12})`;
                     ctx.fill();
                 }
             }
 
-            // ---- 鼠标触发涟漪（带速度方向） ----
             if (inside) {
                 for (let node of STATE.nodes) {
                     const dx = mx - node.x;
@@ -963,13 +1111,13 @@
                             if (d2 < 8 && r.life > 0.5) { hasRecent = true; break; }
                         }
                         if (!hasRecent) {
-                            triggerNodeRipple(node, 7 + Math.random() * 4, STATE.mouseVX, STATE.mouseVY);
+                            const brightness = PARAMS.manualRippleBrightness + Math.random() * 4;
+                            triggerNodeRipple(node, brightness, STATE.mouseVX, STATE.mouseVY);
                         }
                     }
                 }
             }
 
-            // ---- 鼠标光圈 ----
             if (inside && mx > 0 && mx < W && my > 0 && my < H) {
                 const mainR = PARAMS.lightRadius;
 
@@ -1049,10 +1197,8 @@
                 ctx.stroke();
             }
 
-            // ---- 绘制标题 ----
             drawTitle();
 
-            // ---- 角落信息 ----
             const rippleCount = STATE.ripples.filter(r => r.isActive).length;
             ctx.fillStyle = 'rgba(200,210,225,0.004)';
             ctx.font = '8px Inter, sans-serif';
@@ -1070,13 +1216,28 @@
         draw();
 
         document.addEventListener('click', () => {
-            if (!STATE.audioCtx) initAudio();
-        }, { once: true });
+            if (!STATE.audioReady) {
+                initAudio();
+            }
+        }, { once: false });
 
-        console.log('✦ Ripple — 光 · 涟漪');
-        console.log('✦ 标题: Ripple · 花体字');
-        console.log('✦ 涟漪椭圆拉伸 · 随鼠标方向变形');
-        console.log('✦ 推开幅度: 6 · 回弹更慢 · 阻力更大');
+        document.addEventListener('touchstart', () => {
+            if (!STATE.audioReady) {
+                initAudio();
+            }
+        }, { once: false });
+
+        setTimeout(() => {
+            if (!STATE.audioReady) {
+                console.log('✦ 等待用户交互以激活音频...');
+            }
+        }, 1000);
+
+        console.log('✦ Ripple — 光 · 涟漪 (暗色模式)');
+        console.log('✦ 浮动幅度: 2.0');
+        console.log('✦ 自动涟漪: 8-15秒 · 2-4个节点 · 亮度15');
+        console.log('✦ 缓慢呼吸节奏');
+        console.log('✦ 背景音乐 + 水声 (需用户交互后激活)');
     </script>
 </body>
 </html>
