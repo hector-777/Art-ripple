@@ -2,30 +2,24 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>光 · 涟漪 — Ripple</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,200;14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', 'Helvetica Neue', -apple-system, sans-serif;
+            font-family: 'Inter', 'Helvetica Neue', sans-serif;
             background: #06080a;
             color: #fff;
             overflow: hidden;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
             touch-action: none;
             transition: background-color 1.5s ease;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
-
         #demo-section {
             position: relative;
             width: 100vw;
@@ -35,13 +29,12 @@
             cursor: none;
             transition: background-color 1.5s ease;
         }
-
         #demo-section canvas {
             display: block;
             width: 100% !important;
             height: 100% !important;
+            pointer-events: none;
         }
-
         .nav-link {
             position: absolute;
             bottom: 40px;
@@ -51,34 +44,30 @@
             font-weight: 300;
             letter-spacing: 0.2em;
             text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.10);
+            color: rgba(255,255,255,0.10);
             text-decoration: none;
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255,255,255,0.03);
             padding: 10px 28px;
-            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            background: rgba(255, 255, 255, 0.01);
+            transition: all 0.6s ease;
+            background: rgba(255,255,255,0.01);
             font-family: inherit;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
-
         .nav-link:hover {
-            color: rgba(255, 255, 255, 0.25);
-            border-color: rgba(255, 255, 255, 0.08);
-            background: rgba(255, 255, 255, 0.02);
+            color: rgba(255,255,255,0.25);
+            border-color: rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.02);
         }
-        .nav-link:active {
-            opacity: 0.6;
-        }
-
         .mode-toggle {
             position: absolute;
             bottom: 40px;
             right: 44px;
             z-index: 20;
             font-size: 22px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.04);
             border-radius: 50%;
             width: 56px;
             height: 56px;
@@ -86,24 +75,21 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: all 0.6s ease;
             font-family: inherit;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             backdrop-filter: blur(4px);
-            background: rgba(0, 0, 0, 0.2);
-            color: rgba(255, 255, 255, 0.2);
+            background: rgba(0,0,0,0.2);
+            color: rgba(255,255,255,0.2);
+            touch-action: manipulation;
         }
-
         .mode-toggle:hover {
-            border-color: rgba(255, 255, 255, 0.12);
-            color: rgba(255, 255, 255, 0.5);
-            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(255,255,255,0.12);
+            color: rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.03);
         }
-        .mode-toggle:active {
-            transform: scale(0.92);
-        }
-
+        .mode-toggle:active { transform: scale(0.92); }
         .hint {
             position: absolute;
             bottom: 40px;
@@ -112,47 +98,24 @@
             font-size: 9px;
             font-weight: 300;
             letter-spacing: 0.15em;
-            color: rgba(255, 255, 255, 0.02);
+            color: rgba(255,255,255,0.02);
             text-align: right;
             line-height: 2;
             pointer-events: none;
             user-select: none;
             text-transform: uppercase;
         }
-
         @media (max-width: 768px) {
-            .nav-link {
-                bottom: 24px;
-                left: 24px;
-                font-size: 9px;
-                padding: 8px 18px;
-            }
-            .mode-toggle {
-                bottom: 24px;
-                right: 24px;
-                width: 48px;
-                height: 48px;
-                font-size: 18px;
-            }
-            .hint {
-                display: none;
-            }
+            .nav-link { bottom: 30px; left: 20px; font-size: 9px; padding: 10px 18px; z-index: 25; }
+            .mode-toggle { bottom: 30px; right: 20px; width: 56px; height: 56px; font-size: 20px; z-index: 25; background: rgba(0,0,0,0.3); }
+            .hint { display: none; }
         }
-
         @media (max-width: 480px) {
-            .nav-link {
-                bottom: 16px;
-                left: 16px;
-                font-size: 8px;
-                padding: 6px 14px;
-            }
-            .mode-toggle {
-                bottom: 16px;
-                right: 16px;
-                width: 42px;
-                height: 42px;
-                font-size: 16px;
-            }
+            .nav-link { bottom: 24px; left: 16px; font-size: 8px; padding: 8px 14px; }
+            .mode-toggle { bottom: 24px; right: 16px; width: 50px; height: 50px; font-size: 18px; }
+        }
+        @supports (padding: max(0px)) {
+            .nav-link, .mode-toggle { padding-bottom: max(10px, env(safe-area-inset-bottom,0px)); }
         }
     </style>
 </head>
@@ -172,6 +135,7 @@
             nodes: [],
             ripples: [],
             transitionRipples: [],
+            colorOverlay: [],
             mouseX: -9999,
             mouseY: -9999,
             mouseInside: false,
@@ -181,6 +145,8 @@
             mouseVY: 0,
             prevMouseX: -9999,
             prevMouseY: -9999,
+            mouseLastMoveTime: 0,
+            mouseStatic: false,
 
             currentMode: 'dark',
             isTransitioning: false,
@@ -203,7 +169,6 @@
         const ctx = canvas.getContext('2d');
         const demoSection = document.getElementById('demo-section');
         demoSection.prepend(canvas);
-
         let W, H, dpr = 1;
 
         function checkMobile() {
@@ -227,7 +192,12 @@
                 titleText: 'rgba(245,248,252,',
                 titleStroke: 'rgba(200,210,225,0.15)',
                 titleAccent: 'rgba(200,210,225,',
-                modeIcon: '☀️',
+                mouseCore: 'rgba(220,230,240,0.18)',
+                mouseInner: 'rgba(220,230,240,0.04)',
+                mouseGlow: 'rgba(220,230,240,0.015)',
+                mouseMid: 'rgba(220,230,240,0.01)',
+                mouseCross: 'rgba(220,230,240,0.015)',
+                mouseRing: 'rgba(220,230,240,0.008)',
             },
             light: {
                 bg: '#f5f0e8',
@@ -241,7 +211,12 @@
                 titleText: 'rgba(80,75,70,',
                 titleStroke: 'rgba(120,115,105,0.12)',
                 titleAccent: 'rgba(160,155,145,',
-                modeIcon: '🌙',
+                mouseCore: 'rgba(80,75,70,0.25)',
+                mouseInner: 'rgba(80,75,70,0.05)',
+                mouseGlow: 'rgba(80,75,70,0.02)',
+                mouseMid: 'rgba(80,75,70,0.015)',
+                mouseCross: 'rgba(80,75,70,0.02)',
+                mouseRing: 'rgba(80,75,70,0.01)',
             }
         };
 
@@ -254,8 +229,8 @@
             lightRadius: 170,
             nodeTriggerDist: 75,
             rippleSpeedBase: 0.38,
-            rippleDecay: 0.27,
-            minStrength: 1.0,
+            rippleDecay: 0.35,
+            minStrength: 0.5,
             nodeBaseBrightness: 0.012,
             nodeBrightnessFactor: 1.2,
             lineBaseAlpha: 0.008,
@@ -291,10 +266,19 @@
             textLayerGlow: 8,
             textLayerGlowAlpha: 0.08,
 
-            transitionSourceCount: 3,
-            transitionRippleStrength: 22,
-            transitionRippleMaxRadius: 180,
-            transitionCoverThreshold: 0.7,
+            // 鼠标静止阈值
+            mouseStaticThreshold: 800,
+
+            // ===== 转场参数 =====
+            transitionSourceCount: 1,
+            transitionRippleStrength: 40,
+            transitionRippleMaxRadius: 550,
+            transitionRippleSpeedMul: 0.75,
+            transitionCoverThreshold: 0.35,
+            transitionActivateRadiusMin: 0.10,
+            transitionActivateRadiusMax: 0.50,
+            transitionStrengthRetain: 0.75,
+            transitionActivateDelay: 200,
         };
 
         // ============================================================
@@ -309,10 +293,8 @@
             let attempts = 0;
             const maxAttempts = 10000;
 
-            const titleRegionY = H * 0.05,
-                titleRegionH = H * 0.25;
-            const titleRegionX = W * 0.10,
-                titleRegionW = W * 0.80;
+            const titleRegionY = H * 0.05, titleRegionH = H * 0.25;
+            const titleRegionX = W * 0.10, titleRegionW = W * 0.80;
 
             const brightnessLevels = [];
             for (let i = 0; i < targetCount; i++) brightnessLevels.push(0.1 + Math.random() * 0.9);
@@ -330,29 +312,26 @@
                 if (!skip) {
                     let tooClose = false;
                     for (let n of tempNodes) {
-                        const dx = n.x - x,
-                            dy = n.y - y;
+                        const dx = n.x - x, dy = n.y - y;
                         if (dx * dx + dy * dy < minDist * minDist) { tooClose = true; break; }
                     }
                     if (!tooClose) {
                         const brightBase = brightnessLevels[idx % brightnessLevels.length];
                         tempNodes.push({
                             id: allNodes.length,
-                            x,
-                            y,
-                            baseX: x,
-                            baseY: y,
+                            x, y,
+                            baseX: x, baseY: y,
                             brightness: brightBase * 0.3,
                             targetBrightness: 0,
                             phase: Math.random() * Math.PI * 2,
                             waveOffset: Math.random() * 100,
-                            vx: 0,
-                            vy: 0,
+                            vx: 0, vy: 0,
                             baseBrightness: brightBase,
                             lastRippleTime: 0,
                             highlightUntil: 0,
                             transitionCovered: false,
                             transitionCoverTime: 0,
+                            transitionActivated: false,
                         });
                         idx++;
                     }
@@ -363,22 +342,16 @@
             console.log('✦ 生成 ' + allNodes.length + ' 个节点');
         }
 
-        // ============================================================
-        //  获取当前模式颜色
-        // ============================================================
-        function C() {
-            return COLORS[STATE.currentMode];
-        }
+        function C() { return COLORS[STATE.currentMode]; }
 
         // ============================================================
-        //  绘制标题
+        //  绘制标题（精简）
         // ============================================================
         function drawTitle() {
             const text = PARAMS.titleText;
             const fontSize = Math.min(W * PARAMS.titleSize, H * 0.12);
             const baseY = H * PARAMS.titleY;
-            const cx = W / 2,
-                cy = baseY;
+            const cx = W / 2, cy = baseY;
             const colors = C();
 
             ctx.textAlign = 'center';
@@ -386,7 +359,6 @@
             ctx.font = fontSize + 'px "Great Vibes", "Alex Brush", "Tangerine", "Georgia", serif';
 
             const glowAlpha = PARAMS.glowLayerAlpha;
-
             ctx.save();
             ctx.shadowColor = colors.titleGlow + (glowAlpha * 0.3) + ')';
             ctx.shadowBlur = PARAMS.glowLayerBlur * 1.5;
@@ -414,8 +386,7 @@
             for (let i = 0; i < text.length; i++) {
                 const char = text[i];
                 const offset = (i - (text.length - 1) / 2) * fontSize * (0.75 + PARAMS.titleLetterSpacing);
-                const charX = cx + offset,
-                    charY = cy;
+                const charX = cx + offset, charY = cy;
                 for (let ring = 0; ring < 3; ring++) {
                     const radius = fontSize * (0.4 + ring * 0.35) + Math.sin(STATE.frame * 0.01 + i * 0.5 + ring) * 2.5;
                     const grad = ctx.createRadialGradient(charX, charY + 2, 0, charX, charY + 2, radius);
@@ -453,13 +424,6 @@
             ctx.strokeText(text, cx, cy + 2);
             ctx.restore();
 
-            ctx.save();
-            ctx.shadowBlur = 0;
-            ctx.globalAlpha = 0.06;
-            ctx.fillStyle = 'rgba(255,255,255,0.04)';
-            ctx.fillText(text, cx - 1, cy);
-            ctx.restore();
-
             for (let i = 0; i < text.length - 1; i++) {
                 const o1 = (i - (text.length - 1) / 2) * fontSize * (0.75 + PARAMS.titleLetterSpacing);
                 const o2 = (i + 1 - (text.length - 1) / 2) * fontSize * (0.75 + PARAMS.titleLetterSpacing);
@@ -474,8 +438,7 @@
 
             const totalWidth = text.length * fontSize * (0.75 + PARAMS.titleLetterSpacing);
             const lineY = cy + fontSize * 0.58 + Math.sin(STATE.frame * 0.008) * 1.5;
-            const lx1 = cx - totalWidth * 0.48,
-                lx2 = cx + totalWidth * 0.48;
+            const lx1 = cx - totalWidth * 0.48, lx2 = cx + totalWidth * 0.48;
 
             ctx.beginPath();
             ctx.moveTo(lx1, lineY);
@@ -491,40 +454,23 @@
             ctx.strokeStyle = colors.titleAccent + (0.015 + 0.006 * Math.sin(STATE.frame * 0.012)) + ')';
             ctx.lineWidth = 0.2;
             ctx.stroke();
-
-            const dots = [
-                [lx1, lineY],
-                [lx2, lineY],
-                [lx1 + 8, lineY2],
-                [lx2 - 8, lineY2]
-            ];
-            for (let d of dots) {
-                const ds = 0.5 + 0.3 * Math.sin(STATE.frame * 0.01 + d[0]);
-                ctx.beginPath();
-                ctx.arc(d[0], d[1], ds, 0, Math.PI * 2);
-                ctx.fillStyle = colors.titleAccent + (0.025 + 0.015 * Math.sin(STATE.frame * 0.01 + d[0])) + ')';
-                ctx.fill();
-            }
         }
 
         // ============================================================
-        //  涟漪系统
+        //  普通涟漪系统（已修复二级涟漪 + 鼠标静止降频）
         // ============================================================
-        function createRipple(x, y, brightness, maxRadiusOverride, vx, vy, isAuto, isTransition, mode) {
-            const speed = (isTransition ? 0.5 : 1.0) * (PARAMS.rippleSpeedBase + brightness * 0.015 + (Math.random() - 0.5) *
-                0.06);
-            const maxRadius = maxRadiusOverride || (40 + brightness * 2.5 + Math.random() * 20);
+        function createRipple(x, y, brightness, maxRadiusOverride, vx, vy, isAuto) {
+            const speed = PARAMS.rippleSpeedBase + brightness * 0.015 + (Math.random() - 0.5) * 0.06;
+            const maxRadius = maxRadiusOverride || (50 + brightness * 3.0 + Math.random() * 25);
             const speedVal = Math.sqrt(vx * vx + vy * vy);
-            let stretchAngle = 0,
-                stretchAmount = 0;
+            let stretchAngle = 0, stretchAmount = 0;
             if (speedVal > 0.3) {
                 stretchAngle = Math.atan2(vy, vx);
                 stretchAmount = Math.min(speedVal * 0.08, 0.5) * PARAMS.rippleStretchStrength;
             }
 
             const ripple = {
-                x,
-                y,
+                x, y,
                 radius: 0,
                 maxRadius,
                 life: 1.0,
@@ -540,31 +486,26 @@
                 stretchAngle,
                 stretchAmount,
                 isAuto: isAuto || false,
-                isTransition: isTransition || false,
-                mode: mode || STATE.currentMode,
+                isTransition: false,
             };
-
-            if (isTransition) {
-                STATE.transitionRipples.push(ripple);
-            } else {
-                STATE.ripples.push(ripple);
-            }
+            STATE.ripples.push(ripple);
             return ripple;
         }
 
-        function triggerNodeRipple(node, brightness, vx, vy, isTransition, mode) {
-            const now = performance.now();
-            if (!isTransition && node.lastRippleTime && (now - node.lastRippleTime) < PARAMS.rippleCooldown) {
-                return;
+        function triggerNodeRipple(node, brightness, vx, vy) {
+            // 鼠标静止时降低触发概率
+            if (STATE.mouseStatic) {
+                if (Math.random() > 0.25) return; // 静止时只有 25% 概率触发
             }
-            if (!isTransition) node.lastRippleTime = now;
+
+            const now = performance.now();
+            if (node.lastRippleTime && (now - node.lastRippleTime) < PARAMS.rippleCooldown) return;
+            node.lastRippleTime = now;
 
             const s = brightness * (0.7 + Math.random() * 0.6);
-            const maxR = isTransition ? (PARAMS.transitionRippleMaxRadius * (0.5 + 0.5 * Math.random())) : (30 + s * 2.0 +
-                Math.random() * 15);
+            const maxR = 40 + s * 2.5 + Math.random() * 20;
             const speedVal = Math.sqrt(vx * vx + vy * vy);
-            let stretchAngle = 0,
-                stretchAmount = 0;
+            let stretchAngle = 0, stretchAmount = 0;
             if (speedVal > 0.3) {
                 stretchAngle = Math.atan2(vy, vx);
                 stretchAmount = Math.min(speedVal * 0.08, 0.5) * PARAMS.rippleStretchStrength;
@@ -576,7 +517,7 @@
                 radius: 0,
                 maxRadius: maxR,
                 life: 1.0,
-                speed: (isTransition ? 0.5 : 1.0) * (PARAMS.rippleSpeedBase + s * 0.008 + (Math.random() - 0.5) * 0.05),
+                speed: PARAMS.rippleSpeedBase + s * 0.008 + (Math.random() - 0.5) * 0.05,
                 brightness: s,
                 triggeredSet: new Set([node.id]),
                 isActive: true,
@@ -589,20 +530,13 @@
                 stretchAngle,
                 stretchAmount,
                 isAuto: false,
-                isTransition: isTransition || false,
-                mode: mode || STATE.currentMode,
+                isTransition: false,
             };
-
-            if (isTransition) {
-                STATE.transitionRipples.push(ripple);
-            } else {
-                STATE.ripples.push(ripple);
-            }
+            STATE.ripples.push(ripple);
             return ripple;
         }
 
         function updateRipples() {
-            // 普通涟漪
             const toRemove = [];
             for (let i = 0; i < STATE.ripples.length; i++) {
                 const ripple = STATE.ripples[i];
@@ -619,136 +553,39 @@
                 if (newBrightness < PARAMS.minStrength) continue;
                 for (let node of STATE.nodes) {
                     if (ripple.triggeredSet.has(node.id)) continue;
-                    const dx = node.x - ripple.x,
-                        dy = node.y - ripple.y;
+                    const dx = node.x - ripple.x, dy = node.y - ripple.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
-                    const threshold = ripple.radius + 2 + (Math.random() - 0.5) * 4;
+                    const threshold = ripple.radius + 5 + (Math.random() - 0.5) * 6;
                     if (dist < threshold) {
                         ripple.triggeredSet.add(node.id);
                         setTimeout(() => {
+                            if (!node || node.lastRippleTime && (performance.now() - node.lastRippleTime) < PARAMS
+                                .rippleCooldown) return;
                             triggerNodeRipple(node, newBrightness,
                                 ripple.stretchAngle ? Math.cos(ripple.stretchAngle) * 1 : 0,
-                                ripple.stretchAngle ? Math.sin(ripple.stretchAngle) * 1 : 0,
-                                ripple.isTransition || false,
-                                ripple.mode
+                                ripple.stretchAngle ? Math.sin(ripple.stretchAngle) * 1 : 0
                             );
-                        }, Math.random() * 80);
+                        }, 50 + Math.random() * 100);
                     }
                 }
             }
             for (let i = toRemove.length - 1; i >= 0; i--) {
                 STATE.ripples.splice(toRemove[i], 1);
             }
-
-            // 过渡涟漪
-            const transToRemove = [];
-            for (let i = 0; i < STATE.transitionRipples.length; i++) {
-                const ripple = STATE.transitionRipples[i];
-                if (!ripple.isActive) continue;
-                ripple.radius += ripple.speed;
-                ripple.life -= 0.004;
-                if (ripple.life <= 0 || ripple.radius > ripple.maxRadius) {
-                    ripple.isActive = false;
-                    transToRemove.push(i);
-                    continue;
-                }
-                if (ripple.brightness < PARAMS.minStrength) continue;
-                const newBrightness = ripple.brightness * PARAMS.rippleDecay * (0.85 + Math.random() * 0.3);
-                if (newBrightness < PARAMS.minStrength) continue;
-
-                const coverRadius = ripple.radius * 0.9;
-                for (let node of STATE.nodes) {
-                    if (ripple.triggeredSet.has(node.id)) continue;
-                    const dx = node.x - ripple.x,
-                        dy = node.y - ripple.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < coverRadius && !node.transitionCovered) {
-                        node.transitionCovered = true;
-                        node.transitionCoverTime = performance.now();
-                        node.highlightUntil = performance.now() + 600;
-                        node.targetBrightness = 1.0;
-                        setTimeout(() => { node.targetBrightness = 0.3; }, 600);
-                        setTimeout(() => {
-                            triggerNodeRipple(node, newBrightness * 0.7,
-                                (dx / (dist + 0.1)) * 0.5,
-                                (dy / (dist + 0.1)) * 0.5,
-                                true,
-                                ripple.mode
-                            );
-                        }, 50 + Math.random() * 100);
-                    }
-                }
-
-                const newStrength = ripple.brightness * PARAMS.rippleDecay * (0.85 + Math.random() * 0.3);
-                if (newStrength >= PARAMS.minStrength) {
-                    for (let node of STATE.nodes) {
-                        if (ripple.triggeredSet.has(node.id)) continue;
-                        const dx = node.x - ripple.x,
-                            dy = node.y - ripple.y;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-                        const threshold = ripple.radius + 3 + (Math.random() - 0.5) * 5;
-                        if (dist < threshold && !node.transitionCovered) {
-                            ripple.triggeredSet.add(node.id);
-                            setTimeout(() => {
-                                const subRipple = triggerNodeRipple(node, newStrength,
-                                    (dx / (dist + 0.1)) * 0.5,
-                                    (dy / (dist + 0.1)) * 0.5,
-                                    true,
-                                    ripple.mode
-                                );
-                                if (subRipple) {
-                                    subRipple.maxRadius = subRipple.maxRadius * 0.8;
-                                }
-                            }, 50 + Math.random() * 80);
-                        }
-                    }
-                }
-            }
-            for (let i = transToRemove.length - 1; i >= 0; i--) {
-                STATE.transitionRipples.splice(transToRemove[i], 1);
-            }
-
-            if (STATE.isTransitioning) {
-                let coveredCount = 0;
-                for (let node of STATE.nodes) {
-                    if (node.transitionCovered) coveredCount++;
-                }
-                const progress = coveredCount / STATE.nodes.length;
-                STATE.transitionProgress = progress;
-
-                if (progress > PARAMS.transitionCoverThreshold) {
-                    finishTransition();
-                }
-            }
         }
 
-        // ============================================================
-        //  绘制涟漪
-        // ============================================================
-        function drawRipples() {
+        function drawNormalRipples() {
             const colors = C();
-            const allRipples = [...STATE.ripples, ...STATE.transitionRipples];
-
-            for (let ripple of allRipples) {
+            for (let ripple of STATE.ripples) {
                 if (!ripple.isActive) continue;
-                const life = ripple.life,
-                    r = ripple.radius,
-                    brightness = ripple.brightness;
+                const life = ripple.life, r = ripple.radius, brightness = ripple.brightness;
                 const baseBright = Math.min(1, brightness / 10) * 1.4;
                 const alpha = life * baseBright * PARAMS.rippleAlphaBase;
                 if (alpha < 0.001) continue;
 
-                const isTransition = ripple.isTransition || false;
                 const stretchAngle = ripple.stretchAngle || 0;
                 const stretchAmount = ripple.stretchAmount || 0;
                 const layers = Math.min(5, 3 + Math.floor(brightness / 4));
-
-                let targetColors;
-                if (isTransition) {
-                    targetColors = (ripple.mode === 'dark') ? COLORS.dark : COLORS.light;
-                } else {
-                    targetColors = colors;
-                }
 
                 for (let layer = 0; layer < layers; layer++) {
                     const offset = layer * 3 * (1 - life * 0.2);
@@ -763,29 +600,24 @@
                     ctx.beginPath();
                     for (let k = 0; k <= segments; k++) {
                         const angle = (k / segments) * Math.PI * 2;
-                        const w1 = Math.sin(angle * PARAMS.waveFrequency + STATE.frame * 0.015 + ripple.distortionSeed +
-                            layerWave) * distortion * 1.8;
-                        const w2 = Math.cos(angle * 2.3 + STATE.frame * 0.01 + ripple.distortionSeed * 0.7 + layerWave *
-                            0.5) * distortion * 1.2;
-                        const w3 = Math.sin(angle * 4.7 + STATE.frame * 0.008 + ripple.distortionSeed * 1.3 + layerWave *
-                            0.3) * distortion * 0.7;
-                        const w4 = Math.cos(angle * 1.1 + STATE.frame * 0.012 + ripple.distortionSeed * 0.4 + layerWave *
-                            0.7) * distortion * 0.5;
+                        const w1 = Math.sin(angle * PARAMS.waveFrequency + STATE.frame * 0.015 + ripple.distortionSeed + layerWave) * distortion * 1.8;
+                        const w2 = Math.cos(angle * 2.3 + STATE.frame * 0.01 + ripple.distortionSeed * 0.7 + layerWave * 0.5) * distortion * 1.2;
+                        const w3 = Math.sin(angle * 4.7 + STATE.frame * 0.008 + ripple.distortionSeed * 1.3 + layerWave * 0.3) * distortion * 0.7;
+                        const w4 = Math.cos(angle * 1.1 + STATE.frame * 0.012 + ripple.distortionSeed * 0.4 + layerWave * 0.7) * distortion * 0.5;
                         const offsetR = (w1 + w2 + w3 + w4) * 0.2;
                         const finalR = Math.max(0, rad + offsetR);
                         const sx = finalR * Math.cos(angle) * (1 + stretchAmount * 0.5 * Math.cos(stretchAngle));
                         const sy = finalR * Math.sin(angle) * (1 + stretchAmount * 0.5 * Math.sin(stretchAngle));
-                        const px = ripple.x + sx,
-                            py = ripple.y + sy;
+                        const px = ripple.x + sx, py = ripple.y + sy;
                         if (k === 0) ctx.moveTo(px, py);
                         else ctx.lineTo(px, py);
                     }
                     ctx.closePath();
 
                     const layerAlpha = alpha * (1 - layer / layers) * (0.6 + 0.4 * Math.sin(life * 2.5 + layer));
-                    const baseR = parseInt(targetColors.rippleInner.match(/\d+/g)?.[0] || 220);
-                    const baseG = parseInt(targetColors.rippleInner.match(/\d+/g)?.[1] || 225);
-                    const baseB = parseInt(targetColors.rippleInner.match(/\d+/g)?.[2] || 235);
+                    const baseR = parseInt(colors.rippleInner.match(/\d+/g)?.[0] || 220);
+                    const baseG = parseInt(colors.rippleInner.match(/\d+/g)?.[1] || 225);
+                    const baseB = parseInt(colors.rippleInner.match(/\d+/g)?.[2] || 235);
                     ctx.strokeStyle = 'rgba(' + baseR + ',' + baseG + ',' + baseB + ',' + Math.min(layerAlpha, 0.18) + ')';
                     ctx.lineWidth = 0.2 + (1 - life) * 0.5 + brightness * 0.015;
                     ctx.stroke();
@@ -796,12 +628,252 @@
                     const cSize = 1.5 + (1 - life) * 3 + brightness * 0.04;
                     const sx = Math.sin(STATE.frame * 0.02 + ripple.distortionSeed) * 0.5;
                     const sy = Math.cos(STATE.frame * 0.018 + ripple.distortionSeed * 0.7) * 0.5;
-                    const baseR = parseInt(targetColors.rippleInner.match(/\d+/g)?.[0] || 220);
-                    const baseG = parseInt(targetColors.rippleInner.match(/\d+/g)?.[1] || 225);
-                    const baseB = parseInt(targetColors.rippleInner.match(/\d+/g)?.[2] || 235);
+                    const baseR = parseInt(colors.rippleInner.match(/\d+/g)?.[0] || 220);
+                    const baseG = parseInt(colors.rippleInner.match(/\d+/g)?.[1] || 225);
+                    const baseB = parseInt(colors.rippleInner.match(/\d+/g)?.[2] || 235);
                     ctx.beginPath();
                     ctx.arc(ripple.x + sx, ripple.y + sy, cSize, 0, Math.PI * 2);
                     ctx.fillStyle = 'rgba(' + baseR + ',' + baseG + ',' + baseB + ',' + Math.min(centerAlpha, 0.18) + ')';
+                    ctx.fill();
+                }
+            }
+        }
+
+        // ============================================================
+        //  转场系统（修复传播 + 固定转场颜色）
+        // ============================================================
+
+        // --- 颜色覆盖层 ---
+        function addColorOverlay(x, y, radius, colorR, colorG, colorB, alpha) {
+            STATE.colorOverlay.push({
+                x, y,
+                radius: radius,
+                maxRadius: radius,
+                colorR, colorG, colorB,
+                alpha: alpha,
+                life: 1.0,
+                isActive: true,
+                createdAt: performance.now(),
+            });
+        }
+
+        function updateColorOverlay() {
+            const now = performance.now();
+            const maxAge = 30000;
+            STATE.colorOverlay = STATE.colorOverlay.filter(o => {
+                return (now - o.createdAt) < maxAge;
+            });
+        }
+
+        function drawColorOverlay() {
+            for (let overlay of STATE.colorOverlay) {
+                const alpha = Math.min(overlay.alpha, 0.85);
+                if (alpha < 0.01) continue;
+
+                const grad = ctx.createRadialGradient(
+                    overlay.x, overlay.y, 0,
+                    overlay.x, overlay.y, overlay.radius
+                );
+                grad.addColorStop(0, 'rgba(' + overlay.colorR + ',' + overlay.colorG + ',' + overlay.colorB + ',' + alpha +
+                    ')');
+                grad.addColorStop(0.7, 'rgba(' + overlay.colorR + ',' + overlay.colorG + ',' + overlay.colorB + ',' + alpha *
+                    0.8 + ')');
+                grad.addColorStop(1, 'rgba(' + overlay.colorR + ',' + overlay.colorG + ',' + overlay.colorB + ',0)');
+
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(overlay.x, overlay.y, overlay.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // --- 固定转场颜色 ---
+        function getTransitionColors(mode) {
+            // mode: 'dark' 表示当前是暗色模式，要切换到亮色
+            // mode: 'light' 表示当前是亮色模式，要切换到暗色
+            if (mode === 'dark') {
+                // 暗→亮：转场圈用暖白色
+                return { r: 245, g: 248, b: 252 };
+            } else {
+                // 亮→暗：转场圈用深灰色
+                return { r: 80, g: 75, b: 70 };
+            }
+        }
+
+        // --- 转场涟漪 ---
+        function createTransitionRipple(x, y, strength, mode) {
+            const maxR = PARAMS.transitionRippleMaxRadius * (0.5 + 0.5 * Math.random());
+            const speed = (PARAMS.rippleSpeedBase + strength * 0.01) * PARAMS.transitionRippleSpeedMul;
+
+            const colors = getTransitionColors(mode);
+            const baseR = colors.r;
+            const baseG = colors.g;
+            const baseB = colors.b;
+
+            const ripple = {
+                x, y,
+                radius: 0,
+                maxRadius: maxR,
+                life: 1.0,
+                speed: speed,
+                strength: strength,
+                mode: mode,
+                colorR: baseR,
+                colorG: baseG,
+                colorB: baseB,
+                triggeredSet: new Set(),
+                isActive: true,
+                phaseOffset: Math.random() * Math.PI * 2,
+                distortionSeed: Math.random() * 100,
+                distortionAmp: 0.3 + Math.random() * 0.5,
+                wavePhase: Math.random() * Math.PI * 2,
+                isTransition: true,
+                lastOverlayRadius: 0,
+                propagationCount: 0,
+            };
+            STATE.transitionRipples.push(ripple);
+            return ripple;
+        }
+
+        function triggerTransitionNode(node, strength, mode, sourceRipple) {
+            if (node.transitionActivated) return;
+            node.transitionActivated = true;
+            node.transitionCovered = true;
+            node.transitionCoverTime = performance.now();
+
+            node.highlightUntil = performance.now() + 800;
+            node.targetBrightness = 1.0;
+            setTimeout(() => { node.targetBrightness = 0.3; }, 800);
+
+            const s = strength * (0.6 + 0.4 * Math.random());
+            const ripple = createTransitionRipple(node.x, node.y, s, mode);
+
+            if (sourceRipple) {
+                for (let id of sourceRipple.triggeredSet) {
+                    ripple.triggeredSet.add(id);
+                }
+            }
+            ripple.triggeredSet.add(node.id);
+
+            return ripple;
+        }
+
+        function updateTransitionRipples() {
+            const toRemove = [];
+            for (let i = 0; i < STATE.transitionRipples.length; i++) {
+                const ripple = STATE.transitionRipples[i];
+                if (!ripple.isActive) continue;
+
+                ripple.radius += ripple.speed;
+                ripple.life -= 0.004;
+
+                // 添加颜色覆盖层
+                if (ripple.radius > ripple.lastOverlayRadius + 8) {
+                    const alpha = Math.min(0.7, (1 - ripple.life * 0.5) * (ripple.strength / 40) * 0.9);
+                    addColorOverlay(
+                        ripple.x, ripple.y,
+                        ripple.radius,
+                        ripple.colorR, ripple.colorG, ripple.colorB,
+                        alpha
+                    );
+                    ripple.lastOverlayRadius = ripple.radius;
+                }
+
+                if (ripple.life <= 0 || ripple.radius > ripple.maxRadius) {
+                    ripple.isActive = false;
+                    toRemove.push(i);
+                    continue;
+                }
+
+                // ---- 传播：检测节点（强制检测，确保能触发） ----
+                if (ripple.strength > 1.5) {
+                    const newStrength = ripple.strength * PARAMS.transitionStrengthRetain;
+                    for (let node of STATE.nodes) {
+                        if (node.transitionActivated) continue;
+                        if (ripple.triggeredSet.has(node.id)) continue;
+
+                        const dx = node.x - ripple.x, dy = node.y - ripple.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        // 扩大检测范围：涟漪半径的 10%-55%
+                        const thresholdMin = 0.08;
+                        const thresholdMax = 0.55;
+                        const threshold = ripple.radius * (thresholdMin + (thresholdMax - thresholdMin) * Math.random());
+                        if (dist < threshold + 15) { // 增加额外容差
+                            ripple.triggeredSet.add(node.id);
+                            setTimeout(() => {
+                                if (!node.transitionActivated) {
+                                    triggerTransitionNode(node, newStrength, ripple.mode, ripple);
+                                }
+                            }, PARAMS.transitionActivateDelay + Math.random() * 150);
+                        }
+                    }
+                }
+            }
+
+            for (let i = toRemove.length - 1; i >= 0; i--) {
+                STATE.transitionRipples.splice(toRemove[i], 1);
+            }
+
+            // 计算覆盖进度
+            let covered = 0;
+            for (let node of STATE.nodes) {
+                if (node.transitionCovered) covered++;
+            }
+            STATE.transitionProgress = covered / STATE.nodes.length;
+
+            if (STATE.transitionProgress > PARAMS.transitionCoverThreshold && STATE.isTransitioning) {
+                finishTransition();
+            }
+        }
+
+        // ---- 绘制转场涟漪 ----
+        function drawTransitionRipples() {
+            for (let ripple of STATE.transitionRipples) {
+                if (!ripple.isActive) continue;
+                const life = ripple.life, r = ripple.radius;
+                const alpha = life * 0.5 * (ripple.strength / 40);
+                if (alpha < 0.005) continue;
+
+                const layers = 3;
+                for (let layer = 0; layer < layers; layer++) {
+                    const offset = layer * 2 * (1 - life * 0.1);
+                    const rad = r + offset;
+                    if (rad > ripple.maxRadius + 15) continue;
+                    const segments = 50 + Math.floor(rad * 0.3);
+                    const distortion = 0.6 * (0.4 + 0.6 * Math.sin(life * 2 + layer));
+
+                    const strokeAlpha = alpha * (1 - layer / layers) * 0.4;
+                    if (strokeAlpha > 0.005) {
+                        ctx.beginPath();
+                        for (let k = 0; k <= segments; k++) {
+                            const angle = (k / segments) * Math.PI * 2;
+                            const w1 = Math.sin(angle * 3 + STATE.frame * 0.01 + ripple.distortionSeed + layer) * distortion *
+                                1.5;
+                            const w2 = Math.cos(angle * 2 + STATE.frame * 0.008 + ripple.distortionSeed * 0.5 + layer) *
+                                distortion * 0.8;
+                            const offsetR = (w1 + w2) * 0.2;
+                            const finalR = Math.max(0, rad + offsetR);
+                            const px = ripple.x + finalR * Math.cos(angle);
+                            const py = ripple.y + finalR * Math.sin(angle);
+                            if (k === 0) ctx.moveTo(px, py);
+                            else ctx.lineTo(px, py);
+                        }
+                        ctx.closePath();
+                        ctx.strokeStyle = 'rgba(' + ripple.colorR + ',' + ripple.colorG + ',' + ripple.colorB + ',' + Math.min(
+                            strokeAlpha, 0.20) + ')';
+                        ctx.lineWidth = 0.3 + (1 - life) * 0.8 + ripple.strength * 0.015;
+                        ctx.stroke();
+                    }
+                }
+
+                // 中心亮点
+                if (life > 0.3) {
+                    const centerAlpha = life * 0.10 * (ripple.strength / 40);
+                    const cSize = 2 + (1 - life) * 4;
+                    ctx.beginPath();
+                    ctx.arc(ripple.x, ripple.y, cSize, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(' + ripple.colorR + ',' + ripple.colorG + ',' + ripple.colorB + ',' + Math.min(
+                        centerAlpha, 0.20) + ')';
                     ctx.fill();
                 }
             }
@@ -842,13 +914,13 @@
                     node.lastRippleTime = now;
                     const angle = Math.random() * Math.PI * 2;
                     createRipple(node.x, node.y, brightness, undefined,
-                        Math.cos(angle) * 0.3, Math.sin(angle) * 0.3, true, false, STATE.currentMode);
+                        Math.cos(angle) * 0.3, Math.sin(angle) * 0.3, true);
                 }
             }
         }
 
         // ============================================================
-        //  模式切换（涟漪渗透式）
+        //  模式切换
         // ============================================================
         function toggleMode() {
             if (STATE.isTransitioning) return;
@@ -861,81 +933,51 @@
             for (let node of STATE.nodes) {
                 node.transitionCovered = false;
                 node.transitionCoverTime = 0;
+                node.transitionActivated = false;
             }
+
+            STATE.colorOverlay = [];
             STATE.transitionRipples = [];
 
             document.getElementById('modeToggle').textContent = targetMode === 'dark' ? '☀️' : '🌙';
-            console.log('✦ 开始涟漪渗透切换: ' + STATE.currentMode + ' → ' + targetMode);
+            console.log('✦ 开始传染式切换: ' + STATE.currentMode + ' → ' + targetMode);
 
             let candidates = STATE.nodes.filter(n => {
-                const cx = W / 2,
-                    cy = H * PARAMS.titleY;
+                const cx = W / 2, cy = H * PARAMS.titleY;
                 const dist = Math.sqrt((n.x - cx) ** 2 + (n.y - cy) ** 2);
-                return dist < W * 0.35;
+                return dist < W * 0.25;
             });
-            if (candidates.length < PARAMS.transitionSourceCount) {
-                candidates = STATE.nodes;
-            }
+            if (candidates.length === 0) candidates = STATE.nodes;
             const shuffled = candidates.sort(() => Math.random() - 0.5);
-            const sources = shuffled.slice(0, Math.min(PARAMS.transitionSourceCount, shuffled.length));
+            const seed = shuffled[0];
 
-            for (let node of sources) {
-                node.transitionCovered = true;
-                node.transitionCoverTime = performance.now();
-                node.highlightUntil = performance.now() + 1000;
-                node.targetBrightness = 1.0;
-                setTimeout(() => { node.targetBrightness = 0.3; }, 1000);
-
-                const strength = PARAMS.transitionRippleStrength * (0.7 + 0.6 * node.baseBrightness);
-                const angle = Math.random() * Math.PI * 2;
-                const ripple = createRipple(
-                    node.x, node.y,
-                    strength,
-                    PARAMS.transitionRippleMaxRadius * (0.8 + 0.4 * Math.random()),
-                    Math.cos(angle) * 0.3,
-                    Math.sin(angle) * 0.3,
-                    false,
-                    true,
-                    targetMode
-                );
-                ripple.life = 1.2;
-                ripple.maxRadius = PARAMS.transitionRippleMaxRadius * (0.8 + 0.4 * Math.random());
-
-                setTimeout(() => {
-                    for (let n of STATE.nodes) {
-                        if (n.transitionCovered) continue;
-                        const dx = n.x - node.x,
-                            dy = n.y - node.y;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-                        if (dist < 200 && Math.random() > 0.4) {
-                            n.transitionCovered = true;
-                            n.transitionCoverTime = performance.now();
-                            n.highlightUntil = performance.now() + 600;
-                            n.targetBrightness = 1.0;
-                            setTimeout(() => { n.targetBrightness = 0.3; }, 600);
-                            setTimeout(() => {
-                                const sub = triggerNodeRipple(n,
-                                    strength * 0.5,
-                                    (dx / (dist + 0.1)) * 0.5,
-                                    (dy / (dist + 0.1)) * 0.5,
-                                    true,
-                                    targetMode
-                                );
-                                if (sub) {
-                                    sub.maxRadius = sub.maxRadius * 0.7;
-                                }
-                            }, 100 + Math.random() * 200);
-                        }
-                    }
-                }, 300);
+            if (!seed) {
+                finishTransition();
+                return;
             }
+
+            seed.transitionCovered = true;
+            seed.transitionActivated = true;
+            seed.transitionCoverTime = performance.now();
+            seed.highlightUntil = performance.now() + 1200;
+            seed.targetBrightness = 1.0;
+            setTimeout(() => { seed.targetBrightness = 0.3; }, 1200);
+
+            const strength = PARAMS.transitionRippleStrength * (0.8 + 0.3 * seed.baseBrightness);
+            const angle = Math.random() * Math.PI * 2;
+            const ripple = createTransitionRipple(seed.x, seed.y, strength, STATE.currentMode);
+            ripple.triggeredSet.add(seed.id);
+
+            addColorOverlay(seed.x, seed.y, 10, ripple.colorR, ripple.colorG, ripple.colorB, 0.8);
+
+            console.log('✦ 种子节点已激活，开始传染...');
 
             setTimeout(() => {
                 if (STATE.isTransitioning) {
                     console.log('✦ 过渡超时，强制完成切换');
                     finishTransition();
                 }
-            }, 10000);
+            }, 16000);
         }
 
         function finishTransition() {
@@ -948,9 +990,12 @@
             for (let node of STATE.nodes) {
                 node.transitionCovered = false;
                 node.transitionCoverTime = 0;
+                node.transitionActivated = false;
                 node.highlightUntil = 0;
                 node.targetBrightness = 0.3;
             }
+
+            STATE.colorOverlay = [];
             STATE.transitionRipples = [];
 
             const bgColor = COLORS[targetMode].bg;
@@ -958,7 +1003,8 @@
             document.body.style.backgroundColor = bgColor;
 
             document.getElementById('modeToggle').textContent = targetMode === 'dark' ? '☀️' : '🌙';
-            console.log('✦ 模式切换完成: ' + targetMode);
+
+            console.log('✦ 模式切换完成: ' + targetMode + ' (覆盖 ' + Math.round(STATE.transitionProgress * 100) + '%)');
             STATE.transitionProgress = 0;
         }
 
@@ -981,8 +1027,7 @@
 
         function onMove(e) {
             const pos = getPos(e);
-            const newX = pos.x,
-                newY = pos.y;
+            const newX = pos.x, newY = pos.y;
             if (STATE.prevMouseX !== -9999) {
                 STATE.mouseVX = STATE.mouseVX * 0.6 + (newX - STATE.prevMouseX) * 0.4;
                 STATE.mouseVY = STATE.mouseVY * 0.6 + (newY - STATE.prevMouseY) * 0.4;
@@ -992,7 +1037,8 @@
             STATE.mouseX = newX;
             STATE.mouseY = newY;
             STATE.mouseInside = true;
-
+            STATE.mouseLastMoveTime = performance.now();
+            STATE.mouseStatic = false;
             if (!STATE.audioReady) initAudio();
         }
 
@@ -1008,10 +1054,22 @@
             const brightness = PARAMS.manualRippleBrightness + Math.random() * 4;
             const maxR = 80 + brightness * 3 + Math.random() * 40;
             const angle = Math.random() * Math.PI * 2;
-            createRipple(pos.x, pos.y, brightness, maxR, Math.cos(angle) * 0.3, Math.sin(angle) * 0.3, false, false, STATE
-                .currentMode);
+            createRipple(pos.x, pos.y, brightness, maxR, Math.cos(angle) * 0.3, Math.sin(angle) * 0.3, false);
             if (!STATE.audioReady) initAudio();
         }
+
+        // 检查鼠标静止
+        function checkMouseStatic() {
+            if (STATE.mouseInside && !STATE.mouseStatic) {
+                const now = performance.now();
+                if (now - STATE.mouseLastMoveTime > PARAMS.mouseStaticThreshold) {
+                    STATE.mouseStatic = true;
+                }
+            }
+        }
+
+        // 在 draw 循环中调用 checkMouseStatic
+        const originalDraw = draw;
 
         window.addEventListener('mousemove', onMove);
         window.addEventListener('mouseleave', onLeave);
@@ -1031,14 +1089,13 @@
                 const bgmArrayBuffer = await bgmResp.arrayBuffer();
                 STATE.bgmBuffer = await ctx.decodeAudioData(bgmArrayBuffer);
                 console.log('✦ 背景音乐加载成功');
-
                 const waterResp = await fetch('water.mp3');
                 const waterArrayBuffer = await waterResp.arrayBuffer();
                 STATE.waterBuffer = await ctx.decodeAudioData(waterArrayBuffer);
                 console.log('✦ 水声加载成功');
                 return true;
             } catch (e) {
-                console.warn('✦ 音频文件加载失败，请确保 bgm.mp3 和 water.mp3 在根目录:', e);
+                console.warn('✦ 音频文件加载失败:', e);
                 return false;
             }
         }
@@ -1059,7 +1116,7 @@
 
                 const loaded = await loadAudioFiles();
                 if (!loaded) {
-                    console.warn('✦ 音频文件加载失败，跳过音频初始化');
+                    console.warn('✦ 音频文件加载失败');
                     return;
                 }
 
@@ -1114,20 +1171,20 @@
             STATE.frame++;
             ctx.clearRect(0, 0, W, H);
 
-            const mx = STATE.mouseX,
-                my = STATE.mouseY,
-                inside = STATE.mouseInside;
+            // 检查鼠标静止
+            checkMouseStatic();
+
+            const mx = STATE.mouseX, my = STATE.mouseY, inside = STATE.mouseInside;
             const now = performance.now();
             const colors = C();
 
+            // ---- 更新节点 ----
             for (let node of STATE.nodes) {
                 const floatX = Math.sin(STATE.frame * PARAMS.floatSpeed + node.phase) * PARAMS.floatAmplitude;
                 const floatY = Math.cos(STATE.frame * PARAMS.floatSpeed * 0.8 + node.phase * 0.7) * PARAMS.floatAmplitude;
-                let pushX = 0,
-                    pushY = 0;
+                let pushX = 0, pushY = 0;
                 if (inside) {
-                    const dx = node.baseX + floatX - mx,
-                        dy = node.baseY + floatY - my;
+                    const dx = node.baseX + floatX - mx, dy = node.baseY + floatY - my;
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     if (dist < PARAMS.pushRadius && dist > 1) {
                         const strength = (1 - dist / PARAMS.pushRadius) * PARAMS.pushStrength;
@@ -1147,8 +1204,7 @@
 
                 let distToMouse = 9999;
                 if (inside) {
-                    const dx = mx - node.x,
-                        dy = my - node.y;
+                    const dx = mx - node.x, dy = my - node.y;
                     distToMouse = Math.sqrt(dx * dx + dy * dy);
                 }
                 let targetBright = 0;
@@ -1164,16 +1220,26 @@
                 node.phase += 0.003;
             }
 
+            // ---- 更新涟漪 ----
             updateRipples();
+            if (STATE.isTransitioning) {
+                updateTransitionRipples();
+                updateColorOverlay();
+            }
 
+            // ---- 绘制颜色覆盖层 ----
+            if (STATE.isTransitioning) {
+                drawColorOverlay();
+            }
+
+            // ---- 连线 ----
             const connectDist = Math.min(W, H) * 0.10;
             for (let i = 0; i < STATE.nodes.length; i++) {
                 const n1 = STATE.nodes[i];
                 if (n1.brightness < 0.01) continue;
                 for (let j = i + 1; j < STATE.nodes.length; j++) {
                     const n2 = STATE.nodes[j];
-                    const dx = n1.x - n2.x,
-                        dy = n1.y - n2.y;
+                    const dx = n1.x - n2.x, dy = n1.y - n2.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     if (dist < connectDist && dist > 5) {
                         const avgBright = (n1.brightness + n2.brightness) * 0.5;
@@ -1190,8 +1256,13 @@
                 }
             }
 
-            drawRipples();
+            // ---- 绘制涟漪 ----
+            drawNormalRipples();
+            if (STATE.isTransitioning) {
+                drawTransitionRipples();
+            }
 
+            // ---- 绘制节点 ----
             for (let node of STATE.nodes) {
                 const b = node.brightness;
                 const baseMult = node.baseBrightness || 0.5;
@@ -1238,10 +1309,10 @@
                 }
             }
 
+            // ---- 鼠标触发涟漪 ----
             if (inside && !STATE.isTransitioning) {
                 for (let node of STATE.nodes) {
-                    const dx = mx - node.x,
-                        dy = my - node.y;
+                    const dx = mx - node.x, dy = my - node.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
                     if (dist < PARAMS.nodeTriggerDist && node.brightness > 0.08) {
                         let hasRecent = false;
@@ -1251,19 +1322,18 @@
                         }
                         if (!hasRecent) {
                             const brightness = PARAMS.manualRippleBrightness + Math.random() * 4;
-                            triggerNodeRipple(node, brightness, STATE.mouseVX, STATE.mouseVY, false, STATE.currentMode);
+                            triggerNodeRipple(node, brightness, STATE.mouseVX, STATE.mouseVY);
                         }
                     }
                 }
             }
 
-            // ---- 鼠标光圈（可见但柔和） ----
+            // ---- 鼠标光标 ----
             if (inside && mx > 0 && mx < W && my > 0 && my < H) {
                 const mainR = PARAMS.lightRadius;
                 const segments = 60;
                 const waveAmp = 4 + Math.sin(STATE.frame * 0.015) * 2;
 
-                // 主光晕（极淡，几乎看不见）
                 ctx.beginPath();
                 for (let k = 0; k <= segments; k++) {
                     const angle = (k / segments) * Math.PI * 2;
@@ -1279,45 +1349,40 @@
                 }
                 ctx.closePath();
                 const grad = ctx.createRadialGradient(mx, my, 0, mx, my, mainR + 15);
-                grad.addColorStop(0, 'rgba(220,230,240,0.015)');
-                grad.addColorStop(0.4, 'rgba(220,230,240,0.008)');
-                grad.addColorStop(0.8, 'rgba(220,230,240,0.003)');
-                grad.addColorStop(1, 'rgba(220,230,240,0)');
+                grad.addColorStop(0, colors.mouseGlow);
+                grad.addColorStop(0.4, colors.mouseGlow);
+                grad.addColorStop(0.8, colors.mouseGlow);
+                grad.addColorStop(1, 'rgba(200,210,225,0)');
                 ctx.fillStyle = grad;
                 ctx.fill();
 
-                // 中圈微光（极淡）
                 const midR = 30;
                 const grad2 = ctx.createRadialGradient(mx, my, 0, mx, my, midR);
-                grad2.addColorStop(0, 'rgba(220,230,240,0.01)');
-                grad2.addColorStop(0.6, 'rgba(220,230,240,0.005)');
-                grad2.addColorStop(1, 'rgba(220,230,240,0)');
+                grad2.addColorStop(0, colors.mouseMid);
+                grad2.addColorStop(0.6, colors.mouseMid);
+                grad2.addColorStop(1, 'rgba(200,210,225,0)');
                 ctx.fillStyle = grad2;
                 ctx.beginPath();
                 ctx.arc(mx, my, midR, 0, Math.PI * 2);
                 ctx.fill();
 
-                // ---- 核心亮点（可见，像节点一样） ----
                 const pulse = 1 + Math.sin(STATE.frame * 0.02) * 0.05;
-                // 主核心
                 ctx.beginPath();
                 ctx.arc(mx, my, 2.0 * pulse, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(220,230,240,0.15)';
+                ctx.fillStyle = colors.mouseCore;
                 ctx.fill();
 
-                // 内圈微光
                 const innerR = 6 * pulse;
                 const grad3 = ctx.createRadialGradient(mx, my, 0, mx, my, innerR);
-                grad3.addColorStop(0, 'rgba(220,230,240,0.03)');
-                grad3.addColorStop(1, 'rgba(220,230,240,0)');
+                grad3.addColorStop(0, colors.mouseInner);
+                grad3.addColorStop(1, 'rgba(200,210,225,0)');
                 ctx.fillStyle = grad3;
                 ctx.beginPath();
                 ctx.arc(mx, my, innerR, 0, Math.PI * 2);
                 ctx.fill();
 
-                // 极淡十字（帮助定位）
                 const cross = 6;
-                ctx.strokeStyle = 'rgba(220,230,240,0.015)';
+                ctx.strokeStyle = colors.mouseCross;
                 ctx.lineWidth = 0.3;
                 ctx.beginPath();
                 ctx.moveTo(mx - cross, my);
@@ -1326,7 +1391,6 @@
                 ctx.lineTo(mx, my + cross);
                 ctx.stroke();
 
-                // 极淡外圈呼吸环
                 const breatheR = 40 + Math.sin(STATE.frame * 0.015) * 3;
                 ctx.beginPath();
                 for (let k = 0; k <= 50; k++) {
@@ -1339,21 +1403,24 @@
                     else ctx.lineTo(px, py);
                 }
                 ctx.closePath();
-                ctx.strokeStyle = 'rgba(220,230,240,0.008)';
+                ctx.strokeStyle = colors.mouseRing;
                 ctx.lineWidth = 0.3;
                 ctx.stroke();
             }
 
+            // ---- 标题 ----
             drawTitle();
 
+            // ---- 信息 ----
             const rippleCount = STATE.ripples.filter(r => r.isActive).length;
             const transCount = STATE.transitionRipples.filter(r => r.isActive).length;
+            const overlayCount = STATE.colorOverlay.length;
+            const modeLabel = STATE.currentMode === 'dark' ? '暗' : '亮';
             ctx.fillStyle = 'rgba(200,210,225,0.004)';
             ctx.font = '8px Inter, sans-serif';
             ctx.textAlign = 'right';
             ctx.textBaseline = 'bottom';
-            ctx.fillText('涟漪 ' + (rippleCount + transCount) + ' · 节点 ' + STATE.nodes.length + ' · ' + STATE.currentMode, W -
-                44, H - 20);
+            ctx.fillText('涟漪 ' + (rippleCount + transCount) + ' · 覆盖层 ' + overlayCount + ' · ' + modeLabel, W - 44, H - 20);
 
             requestAnimationFrame(draw);
         }
@@ -1381,12 +1448,10 @@
             if (!STATE.audioReady) console.log('✦ 等待用户交互以激活音频...');
         }, 1000);
 
-        console.log('✦ Ripple — 光 · 涟漪 (双模式)');
-        console.log('✦ 暗色模式: 深蓝灰底 + 白色光晕');
-        console.log('✦ 亮色模式: 暖白底 + 灰色影波');
-        console.log('✦ 点击右下角 ☀️/🌙 切换模式');
-        console.log('✦ 涟漪渗透式切换 (涟漪经过即变色)');
-        console.log('✦ 鼠标可见 (核心亮点像节点)');
+        console.log('✦ Ripple — 光 · 涟漪');
+        console.log('✦ 鼠标静止降频: 0.8秒后降为25%');
+        console.log('✦ 转场颜色固定: 暗→亮用暖白, 亮→暗用深灰');
+        console.log('✦ 转场传播修复: 扩大检测范围');
     </script>
 </body>
 </html>
