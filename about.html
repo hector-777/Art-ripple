@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&family=Noto+Serif+SC:wght@300;400;600&display=swap" rel="stylesheet" />
     <style>
-        /* ----- reset & base ----- */
         * {
             margin: 0;
             padding: 0;
@@ -26,8 +25,6 @@
             padding: 0 24px 80px;
             min-height: 100vh;
         }
-
-        /* ----- 背景 Canvas （巨型漣漪） ----- */
         #bg-canvas {
             position: fixed;
             top: 0;
@@ -38,16 +35,12 @@
             pointer-events: none;
             opacity: 0.5;
         }
-
-        /* ----- 所有內容放在 z-index 上層 ----- */
         .container {
             position: relative;
             z-index: 1;
             max-width: 940px;
             margin: 0 auto;
         }
-
-        /* ----- 語言切換（右上角固定） ----- */
         .lang-switch {
             position: fixed;
             top: 28px;
@@ -76,16 +69,12 @@
             color: #3d3935;
             margin: 0 4px;
         }
-
-        /* ----- 版心區塊 ----- */
         .section {
             margin-bottom: 140px;
         }
         .section:last-of-type {
             margin-bottom: 60px;
         }
-
-        /* ----- HERO （引子）----- */
         .hero {
             padding-top: 90px;
             margin-bottom: 100px;
@@ -140,15 +129,12 @@
             50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
             100% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.3; }
         }
-
         .divider-soft {
             width: 60px;
             height: 1px;
             background: rgba(200, 190, 180, 0.10);
             margin: 50px 0 44px;
         }
-
-        /* ----- 通用文字 ----- */
         h2 {
             font-family: 'Noto Serif SC', serif;
             font-weight: 300;
@@ -173,8 +159,6 @@
             color: #8a857e;
             font-size: 15px;
         }
-
-        /* ----- 三列（無卡片） ----- */
         .three-col {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -194,8 +178,6 @@
             color: #b0aaa2;
             line-height: 1.8;
         }
-
-        /* ----- 互動反饋（純文字排版） ----- */
         .feedback-grid {
             display: grid;
             grid-template-columns: 1fr 1.2fr 1.2fr 1fr;
@@ -226,8 +208,6 @@
             font-style: italic;
             margin-top: 10px;
         }
-
-        /* ----- 時間線 ----- */
         .timeline {
             margin-top: 8px;
         }
@@ -263,8 +243,6 @@
             display: block;
             margin-top: 2px;
         }
-
-        /* ----- 網頁原型（明暗雙生重點） ----- */
         .proto-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -295,7 +273,6 @@
             color: #b0aaa2;
             line-height: 1.7;
         }
-
         .proto-features {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -314,8 +291,6 @@
             content: "— ";
             color: #5a554e;
         }
-
-        /* ----- 按鈕（無邊框） ----- */
         .btn-experience {
             display: inline-block;
             margin-top: 24px;
@@ -332,8 +307,6 @@
             color: #ffffff;
             border-bottom-color: rgba(232, 224, 213, 0.5);
         }
-
-        /* ----- 底部 ----- */
         .footer {
             margin-top: 80px;
             padding-top: 32px;
@@ -342,12 +315,8 @@
             color: #4d4944;
             letter-spacing: 1px;
         }
-
-        /* ----- 語言切換內容（隱藏/顯示） ----- */
         .lang-zh, .lang-en { transition: opacity 0.2s ease; }
         .lang-zh.hidden, .lang-en.hidden { display: none; }
-
-        /* ----- 響應式 ----- */
         @media (max-width: 720px) {
             body { padding: 0 18px 60px; }
             .hero { padding-top: 70px; margin-bottom: 70px; }
@@ -370,10 +339,8 @@
 </head>
 <body>
 
-    <!-- 背景巨型漣漪 Canvas -->
     <canvas id="bg-canvas"></canvas>
 
-    <!-- 語言切換按鈕 -->
     <button class="lang-switch" id="langToggle" aria-label="切換語言 / Toggle language">
         <span id="langZhLabel" class="active">繁</span>
         <span class="sep">/</span>
@@ -382,19 +349,17 @@
 
     <div class="container">
 
-        <!-- ============================== -->
-        <!--  引子 （Hero）                  -->
-        <!-- ============================== -->
+        <!-- ===== 引子 ===== -->
         <section class="hero section">
             <div class="lang-zh">
-                <div class="hero-greeting">嗨，你現在看到的，<br />是我正在做的一個嘗試。</div>
+                <div class="hero-greeting">嗨，你現在看到的，<br />是我正在想的一個嘗試。</div>
                 <div class="hero-desc">
-                    它不是一件完成的作品，更像是一份正在生長中的創作筆記。<br />
+                    它還不是一件完成的作品，更像是一份還在生長的創作筆記。<br />
                     我想跟你分享：我想做一件什麼樣的東西、中間經歷了哪些嘗試，以及為什麼你眼前會有這個可以互動的網頁。
                 </div>
             </div>
             <div class="lang-en hidden">
-                <div class="hero-greeting">Hi, what you're looking at<br />is something I'm working on.</div>
+                <div class="hero-greeting">Hi, what you're looking at<br />is something I'm thinking about.</div>
                 <div class="hero-desc">
                     It's not a finished piece — more like a growing set of creative notes.<br />
                     I want to share with you: what I'm trying to make, what I tried along the way, and why there's an interactive webpage in front of you.
@@ -408,9 +373,7 @@
             <div class="divider-soft"></div>
         </section>
 
-        <!-- ============================== -->
-        <!--  我想做一件什麼樣的東西          -->
-        <!-- ============================== -->
+        <!-- ===== 我想做一件什麼樣的東西 ===== -->
         <section class="section">
             <h2 class="lang-zh">我想做一件什麼樣的東西</h2>
             <h2 class="lang-en hidden">What I'm Trying to Make</h2>
@@ -434,9 +397,7 @@
             </div>
         </section>
 
-        <!-- ============================== -->
-        <!--  這件東西的核心理念（三列）      -->
-        <!-- ============================== -->
+        <!-- ===== 核心理念（三列） ===== -->
         <section class="section">
             <h2 class="lang-zh">這件東西的核心理念</h2>
             <h2 class="lang-en hidden">Core Ideas</h2>
@@ -466,9 +427,7 @@
             </div>
         </section>
 
-        <!-- ============================== -->
-        <!--  材質的選擇                     -->
-        <!-- ============================== -->
+        <!-- ===== 材質的選擇（簡約版） ===== -->
         <section class="section">
             <h2 class="lang-zh">材質的選擇</h2>
             <h2 class="lang-en hidden">Choosing the Material</h2>
@@ -476,23 +435,25 @@
                 <div class="lang-zh">
                     <p>材質這件事，我想了很久。</p>
                     <p>我一開始想用細線，因為夠輕、夠隱形。但後來發現，細線在光裡幾乎看不見。我要的是「有體積感的東西」——它必須在黑暗裡存在，但又不是一個實心的柱子擋在你面前。</p>
-                    <p>後來我試了透明水管，裡面灌水。</p>
-                    <p>光穿過水的時候，會折射、會散射。整根管子會微微發光，像一根透明的光柱。當你碰到它，水在裡面晃動——那個晃動是物理的、有機的、不可預測的。每一次晃動都不一樣。這是任何電腦特效都做不出來的。</p>
+                    <p>後來我想到了透明水管，裡面灌水。</p>
+                    <p>我腦子裡的畫面是這樣的：光穿過水的時候，會折射、會散射。整根管子會微微發光，像一根透明的光柱。當你碰到它，水在裡面晃動——那個晃動會帶動光影變化，像漣漪一樣擴散開來。</p>
                     <p>水管末端掛上小鈴鐺或貝殼，水的晃動會帶動它們發出輕響。那是真實的物理碰撞，不是喇叭。</p>
+                    <p class="muted">——</p>
+                    <p class="muted">我還沒真正動手試過。但這是我現在最想做的一件事。</p>
                 </div>
                 <div class="lang-en hidden">
                     <p>I spent a long time thinking about material.</p>
                     <p>I started with thin threads — light, invisible. But then I realized: you can barely see them in the dark. I wanted something with <span class="highlight">volume</span> — something that exists in the darkness, but isn't a solid pillar blocking your way.</p>
-                    <p>Then I tried transparent hoses. Filled with water.</p>
-                    <p>Light passing through water refracts and scatters. The whole hose glows slightly, like a translucent column of light. When you touch it, the water moves — and that movement is physical, organic, unpredictable. Every ripple is different. No computer-generated effect can replicate it.</p>
+                    <p>Then I thought of transparent hoses. Filled with water.</p>
+                    <p>The image in my head is this: light passing through water refracts and scatters. The whole hose glows slightly, like a translucent column of light. When you touch it, the water moves — and that movement shifts the light, rippling outward.</p>
                     <p>Small bells or shells hang at the ends. The swaying water moves them, creating real, physical sounds. Not from speakers.</p>
+                    <p class="muted">——</p>
+                    <p class="muted">I haven't actually tried it yet. But this is the one thing I want to do right now.</p>
                 </div>
             </div>
         </section>
 
-        <!-- ============================== -->
-        <!--  光的邏輯 · 互動反饋            -->
-        <!-- ============================== -->
+        <!-- ===== 光的邏輯 · 互動反饋 ===== -->
         <section class="section">
             <h2 class="lang-zh">光的邏輯，與你的身體</h2>
             <h2 class="lang-en hidden">Light & Your Body</h2>
@@ -510,8 +471,6 @@
                     <p class="muted">Everything is slow. Everything needs your body to trigger it.</p>
                 </div>
             </div>
-
-            <!-- 簡化反饋表格 -->
             <div class="lang-zh">
                 <div class="feedback-grid">
                     <div class="fg-header">動作</div><div class="fg-header">物理反饋</div><div class="fg-header">視覺反饋</div><div class="fg-header">聲音反饋</div>
@@ -532,9 +491,7 @@
             </div>
         </section>
 
-        <!-- ============================== -->
-        <!--  設計過程（時間線）              -->
-        <!-- ============================== -->
+        <!-- ===== 設計過程（時間線） ===== -->
         <section class="section">
             <h2 class="lang-zh">它是怎麼一步一步長出來的</h2>
             <h2 class="lang-en hidden">How It Grew, Step by Step</h2>
@@ -572,9 +529,7 @@
             </div>
         </section>
 
-        <!-- ============================== -->
-        <!--  為什麼先做這個網頁？            -->
-        <!-- ============================== -->
+        <!-- ===== 為什麼先做這個網頁？ ===== -->
         <section class="section">
             <h2 class="lang-zh">為什麼先做這個網頁？</h2>
             <h2 class="lang-en hidden">Why Build a Website First?</h2>
@@ -600,9 +555,7 @@
             </div>
         </section>
 
-        <!-- ============================== -->
-        <!--  這個網頁做了什麼 + 明暗雙生     -->
-        <!-- ============================== -->
+        <!-- ===== 這個網頁做了什麼 + 明暗雙生 ===== -->
         <section class="section">
             <h2 class="lang-zh">這個網頁做了什麼</h2>
             <h2 class="lang-en hidden">What This Web Page Does</h2>
@@ -622,15 +575,15 @@
                 </div>
             </div>
 
-            <!-- 明暗雙生（含掙扎故事） -->
+            <!-- 明暗雙生 -->
             <div style="margin-top: 48px;">
                 <h3 style="font-family:'Noto Serif SC',serif; font-weight:300; font-size:22px; color:#e8e0d5; letter-spacing:2px; margin-bottom:16px;" class="lang-zh">關於暗色和亮色</h3>
                 <h3 style="font-family:'Noto Serif SC',serif; font-weight:300; font-size:22px; color:#e8e0d5; letter-spacing:2px; margin-bottom:16px;" class="lang-en hidden">On Dark and Light</h3>
-                
+
                 <div class="body-text">
                     <div class="lang-zh">
                         <p>一開始我做了暗色版本。朋友看了說：「好像星座喔。」</p>
-                        <p>我當下覺得不太對。我要的不是星空，是<span class="highlight">漣漪</span>啊。但我也理解為什麼他們會這樣想——深色背景上的發光點，人眼天生會把它們看成星星。</p>
+                        <p>我當下覺得不太對。我要的不是星空，是<span class="highlight">漣漪</span>。但我也理解為什麼他們會這樣想——深色背景上的發光點，人眼天生會把它們看成星星。</p>
                         <p>可是裝置本身其實有兩種狀態：關燈的時候，你看到的是光穿過水產生的發光漣漪；開燈的時候，你看到的是水晃動時投下的影子漣漪。</p>
                         <p>所以我在網頁裡也做了兩個模式：</p>
                     </div>
@@ -673,14 +626,11 @@
                 </div>
             </div>
 
-            <!-- 體驗按鈕 -->
             <a href="index.html" class="btn-experience lang-zh">去玩第一頁 →</a>
             <a href="index.html" class="btn-experience lang-en hidden">Go play the first page →</a>
         </section>
 
-        <!-- ============================== -->
-        <!--  結尾                           -->
-        <!-- ============================== -->
+        <!-- ===== 結尾 ===== -->
         <section class="section" style="margin-bottom:40px;">
             <div class="body-text">
                 <div class="lang-zh">
@@ -696,9 +646,7 @@
             </div>
         </section>
 
-        <!-- ============================== -->
-        <!--  FOOTER                         -->
-        <!-- ============================== -->
+        <!-- ===== FOOTER ===== -->
         <div class="footer">
             <span class="lang-zh">光 · 漣漪 ｜ 創作筆記 ｜ 2026</span>
             <span class="lang-en hidden">Ripple ｜ Creative Notes ｜ 2026</span>
@@ -707,9 +655,6 @@
     </div>
 
     <script>
-        // ============================================================
-        //  背景 Canvas：巨型漣漪（極淡白色，慢速呼吸）
-        // ============================================================
         (function backgroundRipples() {
             const canvas = document.getElementById('bg-canvas');
             const ctx = canvas.getContext('2d');
@@ -723,8 +668,8 @@
             resize();
 
             const ripples = [
-                { cx: 0.20, cy: 0.70, phase: 0, speed: 0.015, maxRadius: 0.50, amp: 0.10 },
-                { cx: 0.82, cy: 0.25, phase: 2.1, speed: 0.020, maxRadius: 0.45, amp: 0.08 },
+                { cx: 0.20, cy: 0.70, phase: 0, speed: 0.015, maxRadius: 0.50 },
+                { cx: 0.82, cy: 0.25, phase: 2.1, speed: 0.020, maxRadius: 0.45 },
             ];
 
             let time = 0;
@@ -758,9 +703,6 @@
             draw();
         })();
 
-        // ============================================================
-        //  語言切換（繁 / EN）
-        // ============================================================
         (function langToggle() {
             const btn = document.getElementById('langToggle');
             const zhLabel = document.getElementById('langZhLabel');
