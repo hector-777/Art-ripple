@@ -182,7 +182,7 @@
             prevMouseX: -9999,
             prevMouseY: -9999,
 
-            currentMode: 'dark', // 'dark' | 'light'
+            currentMode: 'dark',
             isTransitioning: false,
             transitionProgress: 0,
             transitionTargetMode: 'dark',
@@ -223,10 +223,6 @@
                 rippleInner: 'rgba(220,235,255,0.8)',
                 rippleMid: 'rgba(220,235,255,0.4)',
                 rippleOuter: 'rgba(220,235,255,0)',
-                cursor: 'rgba(200,210,225,0.02)',
-                cursorMid: 'rgba(200,210,225,0.01)',
-                cursorCore: 'rgba(220,230,240,0.06)',
-                cursorInner: 'rgba(200,210,225,0.02)',
                 titleGlow: 'rgba(220,225,235,',
                 titleText: 'rgba(245,248,252,',
                 titleStroke: 'rgba(200,210,225,0.15)',
@@ -241,10 +237,6 @@
                 rippleInner: 'rgba(181,173,160,0.7)',
                 rippleMid: 'rgba(197,190,181,0.4)',
                 rippleOuter: 'rgba(213,208,200,0)',
-                cursor: 'rgba(180,170,160,0.02)',
-                cursorMid: 'rgba(180,170,160,0.01)',
-                cursorCore: 'rgba(160,150,140,0.05)',
-                cursorInner: 'rgba(180,170,160,0.02)',
                 titleGlow: 'rgba(160,155,145,',
                 titleText: 'rgba(80,75,70,',
                 titleStroke: 'rgba(120,115,105,0.12)',
@@ -299,7 +291,6 @@
             textLayerGlow: 8,
             textLayerGlowAlpha: 0.08,
 
-            // 过渡参数
             transitionSourceCount: 3,
             transitionRippleStrength: 22,
             transitionRippleMaxRadius: 180,
@@ -360,7 +351,6 @@
                             baseBrightness: brightBase,
                             lastRippleTime: 0,
                             highlightUntil: 0,
-                            // 过渡相关：是否已被新颜色覆盖
                             transitionCovered: false,
                             transitionCoverTime: 0,
                         });
@@ -551,7 +541,6 @@
                 stretchAmount,
                 isAuto: isAuto || false,
                 isTransition: isTransition || false,
-                // 过渡涟漪记录它使用的模式颜色
                 mode: mode || STATE.currentMode,
             };
 
@@ -667,7 +656,6 @@
                 const newBrightness = ripple.brightness * PARAMS.rippleDecay * (0.85 + Math.random() * 0.3);
                 if (newBrightness < PARAMS.minStrength) continue;
 
-                // 涟漪经过的地方，节点被覆盖
                 const coverRadius = ripple.radius * 0.9;
                 for (let node of STATE.nodes) {
                     if (ripple.triggeredSet.has(node.id)) continue;
@@ -677,11 +665,9 @@
                     if (dist < coverRadius && !node.transitionCovered) {
                         node.transitionCovered = true;
                         node.transitionCoverTime = performance.now();
-                        // 节点高亮
                         node.highlightUntil = performance.now() + 600;
                         node.targetBrightness = 1.0;
                         setTimeout(() => { node.targetBrightness = 0.3; }, 600);
-                        // 触发次级涟漪
                         setTimeout(() => {
                             triggerNodeRipple(node, newBrightness * 0.7,
                                 (dx / (dist + 0.1)) * 0.5,
@@ -693,7 +679,6 @@
                     }
                 }
 
-                // 传播涟漪
                 const newStrength = ripple.brightness * PARAMS.rippleDecay * (0.85 + Math.random() * 0.3);
                 if (newStrength >= PARAMS.minStrength) {
                     for (let node of STATE.nodes) {
@@ -723,7 +708,6 @@
                 STATE.transitionRipples.splice(transToRemove[i], 1);
             }
 
-            // 检查过渡是否完成
             if (STATE.isTransitioning) {
                 let coveredCount = 0;
                 for (let node of STATE.nodes) {
@@ -759,7 +743,6 @@
                 const stretchAmount = ripple.stretchAmount || 0;
                 const layers = Math.min(5, 3 + Math.floor(brightness / 4));
 
-                // 选择颜色来源：过渡涟漪使用目标模式，普通涟漪使用当前模式
                 let targetColors;
                 if (isTransition) {
                     targetColors = (ripple.mode === 'dark') ? COLORS.dark : COLORS.light;
@@ -875,21 +858,15 @@
             STATE.transitionProgress = 0;
             STATE.transitionTargetMode = targetMode;
 
-            // 重置节点覆盖状态
             for (let node of STATE.nodes) {
                 node.transitionCovered = false;
                 node.transitionCoverTime = 0;
             }
-
-            // 清空旧过渡涟漪
             STATE.transitionRipples = [];
 
-            // 更新按钮图标
             document.getElementById('modeToggle').textContent = targetMode === 'dark' ? '☀️' : '🌙';
-
             console.log('✦ 开始涟漪渗透切换: ' + STATE.currentMode + ' → ' + targetMode);
 
-            // 选择 2-3 个感染源节点（优先靠近画面中央）
             let candidates = STATE.nodes.filter(n => {
                 const cx = W / 2,
                     cy = H * PARAMS.titleY;
@@ -924,7 +901,6 @@
                 ripple.life = 1.2;
                 ripple.maxRadius = PARAMS.transitionRippleMaxRadius * (0.8 + 0.4 * Math.random());
 
-                // 触发附近节点
                 setTimeout(() => {
                     for (let n of STATE.nodes) {
                         if (n.transitionCovered) continue;
@@ -954,7 +930,6 @@
                 }, 300);
             }
 
-            // 安全超时：如果 10 秒后还没完成，强制切换
             setTimeout(() => {
                 if (STATE.isTransitioning) {
                     console.log('✦ 过渡超时，强制完成切换');
@@ -970,27 +945,20 @@
             STATE.currentMode = targetMode;
             STATE.isTransitioning = false;
 
-            // 重置所有节点的覆盖状态（为下次切换准备）
             for (let node of STATE.nodes) {
                 node.transitionCovered = false;
                 node.transitionCoverTime = 0;
                 node.highlightUntil = 0;
-                // 调整亮度到新模式的默认值
                 node.targetBrightness = 0.3;
             }
-
-            // 清空过渡涟漪
             STATE.transitionRipples = [];
 
-            // 更新背景
             const bgColor = COLORS[targetMode].bg;
             demoSection.style.backgroundColor = bgColor;
             document.body.style.backgroundColor = bgColor;
 
-            // 更新按钮
             document.getElementById('modeToggle').textContent = targetMode === 'dark' ? '☀️' : '🌙';
-
-            console.log('✦ 模式切换完成: ' + targetMode + ' (覆盖 ' + Math.round(STATE.transitionProgress * 100) + '%)');
+            console.log('✦ 模式切换完成: ' + targetMode);
             STATE.transitionProgress = 0;
         }
 
@@ -1152,7 +1120,6 @@
             const now = performance.now();
             const colors = C();
 
-            // 更新节点
             for (let node of STATE.nodes) {
                 const floatX = Math.sin(STATE.frame * PARAMS.floatSpeed + node.phase) * PARAMS.floatAmplitude;
                 const floatY = Math.cos(STATE.frame * PARAMS.floatSpeed * 0.8 + node.phase * 0.7) * PARAMS.floatAmplitude;
@@ -1199,7 +1166,6 @@
 
             updateRipples();
 
-            // 连线
             const connectDist = Math.min(W, H) * 0.10;
             for (let i = 0; i < STATE.nodes.length; i++) {
                 const n1 = STATE.nodes[i];
@@ -1224,10 +1190,8 @@
                 }
             }
 
-            // 涟漪
             drawRipples();
 
-            // 绘制节点
             for (let node of STATE.nodes) {
                 const b = node.brightness;
                 const baseMult = node.baseBrightness || 0.5;
@@ -1274,7 +1238,6 @@
                 }
             }
 
-            // 鼠标触发涟漪（非过渡状态）
             if (inside && !STATE.isTransitioning) {
                 for (let node of STATE.nodes) {
                     const dx = mx - node.x,
@@ -1294,13 +1257,13 @@
                 }
             }
 
-            // ---- 鼠标光圈（极淡版本） ----
+            // ---- 鼠标光圈（可见但柔和） ----
             if (inside && mx > 0 && mx < W && my > 0 && my < H) {
                 const mainR = PARAMS.lightRadius;
                 const segments = 60;
                 const waveAmp = 4 + Math.sin(STATE.frame * 0.015) * 2;
 
-                // 极淡主光晕
+                // 主光晕（极淡，几乎看不见）
                 ctx.beginPath();
                 for (let k = 0; k <= segments; k++) {
                     const angle = (k / segments) * Math.PI * 2;
@@ -1323,37 +1286,38 @@
                 ctx.fillStyle = grad;
                 ctx.fill();
 
-                // 极淡中圈
-                const midR = 40;
+                // 中圈微光（极淡）
+                const midR = 30;
                 const grad2 = ctx.createRadialGradient(mx, my, 0, mx, my, midR);
-                grad2.addColorStop(0, 'rgba(220,230,240,0.008)');
-                grad2.addColorStop(0.6, 'rgba(220,230,240,0.004)');
+                grad2.addColorStop(0, 'rgba(220,230,240,0.01)');
+                grad2.addColorStop(0.6, 'rgba(220,230,240,0.005)');
                 grad2.addColorStop(1, 'rgba(220,230,240,0)');
                 ctx.fillStyle = grad2;
                 ctx.beginPath();
                 ctx.arc(mx, my, midR, 0, Math.PI * 2);
                 ctx.fill();
 
-                // 核心亮点（极小极淡）
+                // ---- 核心亮点（可见，像节点一样） ----
                 const pulse = 1 + Math.sin(STATE.frame * 0.02) * 0.05;
+                // 主核心
                 ctx.beginPath();
-                ctx.arc(mx, my, 1.5 * pulse, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(220,230,240,0.06)';
+                ctx.arc(mx, my, 2.0 * pulse, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(220,230,240,0.15)';
                 ctx.fill();
 
                 // 内圈微光
-                const innerR = 10 * pulse;
+                const innerR = 6 * pulse;
                 const grad3 = ctx.createRadialGradient(mx, my, 0, mx, my, innerR);
-                grad3.addColorStop(0, 'rgba(220,230,240,0.01)');
+                grad3.addColorStop(0, 'rgba(220,230,240,0.03)');
                 grad3.addColorStop(1, 'rgba(220,230,240,0)');
                 ctx.fillStyle = grad3;
                 ctx.beginPath();
                 ctx.arc(mx, my, innerR, 0, Math.PI * 2);
                 ctx.fill();
 
-                // 极淡十字
-                const cross = 8;
-                ctx.strokeStyle = 'rgba(220,230,240,0.008)';
+                // 极淡十字（帮助定位）
+                const cross = 6;
+                ctx.strokeStyle = 'rgba(220,230,240,0.015)';
                 ctx.lineWidth = 0.3;
                 ctx.beginPath();
                 ctx.moveTo(mx - cross, my);
@@ -1363,7 +1327,7 @@
                 ctx.stroke();
 
                 // 极淡外圈呼吸环
-                const breatheR = 50 + Math.sin(STATE.frame * 0.015) * 3;
+                const breatheR = 40 + Math.sin(STATE.frame * 0.015) * 3;
                 ctx.beginPath();
                 for (let k = 0; k <= 50; k++) {
                     const angle = (k / 50) * Math.PI * 2;
@@ -1375,7 +1339,7 @@
                     else ctx.lineTo(px, py);
                 }
                 ctx.closePath();
-                ctx.strokeStyle = 'rgba(220,230,240,0.006)';
+                ctx.strokeStyle = 'rgba(220,230,240,0.008)';
                 ctx.lineWidth = 0.3;
                 ctx.stroke();
             }
@@ -1422,7 +1386,7 @@
         console.log('✦ 亮色模式: 暖白底 + 灰色影波');
         console.log('✦ 点击右下角 ☀️/🌙 切换模式');
         console.log('✦ 涟漪渗透式切换 (涟漪经过即变色)');
-        console.log('✦ 鼠标光圈: 极淡 (若有若无)');
+        console.log('✦ 鼠标可见 (核心亮点像节点)');
     </script>
 </body>
 </html>
