@@ -35,76 +35,116 @@
         }
 
         /* ===== 关于项目按钮 — 底部居中 ===== */
-.nav-link {
-    position: absolute;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 100;
-    font-size: 11px;
-    font-weight: 300;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.50);
-    text-decoration: none;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    padding: 10px 28px;
-    transition: all 0.6s ease;
-    background: rgba(0, 0, 0, 0.25);
-    backdrop-filter: blur(8px);
-    font-family: inherit;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-    white-space: nowrap;
-    pointer-events: auto;
-    border-radius: 30px;
-}
+        .nav-link {
+            position: absolute;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            font-size: 11px;
+            font-weight: 300;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.50);
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 10px 28px;
+            transition: all 0.6s ease;
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(8px);
+            font-family: inherit;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            white-space: nowrap;
+            pointer-events: auto;
+            border-radius: 30px;
+        }
 
-.nav-link:hover {
-    color: rgba(255, 255, 255, 0.80);
-    border-color: rgba(255, 255, 255, 0.25);
-    background: rgba(0, 0, 0, 0.40);
-}
+        .nav-link:hover {
+            color: rgba(255, 255, 255, 0.80);
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(0, 0, 0, 0.40);
+        }
 
-/* ===== 手机版专用 ===== */
-@media (max-width: 768px) {
-    .nav-link {
-        bottom: 60px;
-        font-size: 10px;
-        padding: 12px 30px;
-        z-index: 100;
-        color: rgba(255, 255, 255, 0.60);
-        border-color: rgba(255, 255, 255, 0.15);
-        background: rgba(0, 0, 0, 0.35);
-        backdrop-filter: blur(12px);
-        min-width: 140px;
-        text-align: center;
-        border-radius: 30px;
-    }
-    .nav-link:active {
-        transform: translateX(-50%) scale(0.95);
-        background: rgba(255, 255, 255, 0.10);
-    }
-}
+        /* ===== 手机版专用 ===== */
+        @media (max-width: 768px) {
+            .nav-link {
+                bottom: 5%; /* 百分比相对于父容器高度，始终距底部5% */
+                font-size: 10px;
+                padding: 12px 30px;
+                z-index: 100;
+                color: rgba(255, 255, 255, 0.60);
+                border-color: rgba(255, 255, 255, 0.15);
+                background: rgba(0, 0, 0, 0.35);
+                backdrop-filter: blur(12px);
+                min-width: 140px;
+                text-align: center;
+                border-radius: 30px;
+            }
+            .nav-link:active {
+                transform: translateX(-50%) scale(0.95);
+                background: rgba(255, 255, 255, 0.10);
+            }
+        }
 
-@media (max-width: 480px) {
-    .nav-link {
-        bottom: 50px;
-        font-size: 9px;
-        padding: 10px 24px;
-        min-width: 120px;
-    }
-}
+        @media (max-width: 480px) {
+            .nav-link {
+                bottom: 5%; /* 同样保持 5% */
+                font-size: 9px;
+                padding: 10px 24px;
+                min-width: 120px;
+            }
+        }
+
+        /* 安全区域适配（仅增加内边距，不覆盖 bottom 百分比） */
         @supports (padding: max(0px)) {
-            .nav-link { padding-bottom: max(10px, env(safe-area-inset-bottom,0px)); }
+            .nav-link {
+                padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+                padding-left: max(28px, env(safe-area-inset-left, 0px));
+                padding-right: max(28px, env(safe-area-inset-right, 0px));
+            }
+            @media (max-width: 768px) {
+                .nav-link {
+                    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+                    padding-left: max(30px, env(safe-area-inset-left, 0px));
+                    padding-right: max(30px, env(safe-area-inset-right, 0px));
+                }
+            }
+            @media (max-width: 480px) {
+                .nav-link {
+                    padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
+                    padding-left: max(24px, env(safe-area-inset-left, 0px));
+                    padding-right: max(24px, env(safe-area-inset-right, 0px));
+                }
+            }
+        }
+
+        .hint {
+            position: absolute;
+            bottom: 40px;
+            right: 44px;
+            z-index: 15;
+            font-size: 9px;
+            font-weight: 300;
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.02);
+            text-align: right;
+            line-height: 2;
+            pointer-events: none;
+            user-select: none;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 768px) {
+            .hint { display: none; }
         }
     </style>
 </head>
 <body>
 
     <section id="demo-section">
-        <a class="nav-link" href="about.html">↗ 关于项目</a>
+        <a class="nav-link" href="about.html" id="aboutBtn">↗ 关于项目</a>
         <div class="hint">移动 · 光随行<br />涟漪 · 自生发</div>
     </section>
 
@@ -1006,6 +1046,12 @@
         resize();
         draw();
 
+        // ===== 确保手机端按钮点击跳转 =====
+        document.getElementById('aboutBtn').addEventListener('click', function(e) {
+            e.preventDefault(); // 阻止默认行为（但保留 href 作为后备）
+            window.location.href = this.getAttribute('href');
+        });
+
         document.addEventListener('click', () => {
             if (!STATE.audioReady) initAudio();
         }, { once: false });
@@ -1021,7 +1067,7 @@
         console.log('✦ 暗色模式唯一');
         console.log('✦ 涟漪链式传播: dist < ripple.radius');
         console.log('✦ 自动涟漪: 8-15秒, 2-4个节点');
-        console.log('✦ 关于项目按钮 — 底部居中');
+        console.log('✦ 关于项目按钮 — 底部5%居中，点击已修复');
     </script>
 </body>
 </html>
