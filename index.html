@@ -273,6 +273,7 @@
                 // 播放音乐（覆盖层点击是有效的用户手势）
                 playBgm();
                 // 添加 hidden 类，淡出并隐藏覆盖层
+                sessionStorage.setItem('rippleAudioStarted', 'true'); 
                 this.classList.add('hidden');
                 // 延迟移除 DOM（让过渡动画完成）
                 setTimeout(() => {
