@@ -148,6 +148,9 @@
         <div class="hint">移动 · 光随行<br />涟漪 · 自生发</div>
     </section>
 
+    <!-- ===== 背景音乐（隐藏） ===== -->
+    <audio id="bgmAudio" src="./bgm.mp3" loop preload="auto"></audio>
+
     <script>
         // ============================================================
         //  全局状态
@@ -167,14 +170,51 @@
             mouseLastMoveTime: 0,
             mouseStatic: false,
 
-            audioCtx: null,
-            bgmBuffer: null,
-            waterBuffer: null,
-            bgmSource: null,
-            bgmGain: null,
-            audioReady: false,
             autoRippleTimer: null,
         };
+
+        // ============================================================
+        //  背景音乐
+        // ============================================================
+        let bgmAudio = null;
+
+        function initBgm() {
+            bgmAudio = document.getElementById('bgmAudio');
+            if (!bgmAudio) {
+                console.warn('✦ 未找到 bgmAudio 元素');
+                return;
+            }
+            bgmAudio.volume = 0.5;
+
+            // 监听加载错误
+            bgmAudio.addEventListener('error', function(e) {
+                console.warn('✦ 背景音乐加载失败，请确认 ./bgm.mp3 文件存在');
+                console.warn('✦ 错误代码:', e);
+            });
+
+            // 加载成功
+            bgmAudio.addEventListener('canplaythrough', function() {
+                console.log('✦ 背景音乐加载成功');
+            });
+
+            console.log('✦ 背景音乐已初始化');
+        }
+
+        function playBgm() {
+            if (!bgmAudio) {
+                initBgm();
+                if (!bgmAudio) return;
+            }
+
+            if (bgmAudio.paused) {
+                bgmAudio.play().then(function() {
+                    console.log('✦ 背景音乐已开始播放');
+                }).catch(function(err) {
+                    console.warn('✦ 背景音乐播放失败:', err);
+                    console.warn('✦ 可能原因：浏览器自动播放策略阻止，请点击页面交互');
+                });
+            }
+        }
 
         // ============================================================
         //  Canvas 初始化
@@ -216,10 +256,9 @@
         function C() { return COLORS; }
 
         // ============================================================
-        //  参数（已修改）
+        //  参数
         // ============================================================
         const PARAMS = {
-            // 节点数量基准：1920×1080 → 150 个节点（按屏幕面积比例）
             baseArea: 1920 * 1080,
             baseNodes: 150,
             minNodes: 50,
@@ -250,9 +289,7 @@
             autoRippleCountMin: 1,
             autoRippleCountMax: 1,
             autoRippleBrightness: 15,
-            // 高亮持续时间：500ms → 1500ms（延长1秒）
             autoRippleHighlightDuration: 1500,
-            // 自动涟漪速度倍率（0.5 倍，更慢）
             autoRippleSpeedMul: 0.5,
 
             manualRippleBrightness: 10,
@@ -273,12 +310,10 @@
         };
 
         // ============================================================
-        //  生成节点（按屏幕面积比例）
+        //  生成节点
         // ============================================================
         function generateNodes() {
             const allNodes = [];
-
-            // ---- 根据屏幕面积计算节点数量 ----
             const area = W * H;
             const nodeCount = Math.round(area / PARAMS.baseArea * PARAMS.baseNodes);
             const targetCount = Math.max(PARAMS.minNodes, Math.min(PARAMS.maxNodes, nodeCount));
@@ -331,7 +366,7 @@
             }
             allNodes.push(...tempNodes);
             STATE.nodes = allNodes;
-            console.log('✦ 生成 ' + allNodes.length + ' 个节点 (屏幕面积: ' + Math.round(area/10000) + '万像素)');
+            console.log('✦ 生成 ' + allNodes.length + ' 个节点');
         }
 
         // ============================================================
@@ -451,7 +486,6 @@
         // ============================================================
         function createRipple(x, y, brightness, maxRadiusOverride, vx, vy, isAuto) {
             let speed = PARAMS.rippleSpeedBase + brightness * 0.015 + (Math.random() - 0.5) * 0.06;
-            // 如果是自动涟漪，速度减半
             if (isAuto) {
                 speed = speed * PARAMS.autoRippleSpeedMul;
             }
@@ -534,10 +568,10 @@
                 if (!ripple.isActive) continue;
                 ripple.radius += ripple.speed;
                 if (ripple.isAuto) {
-    ripple.life -= 0.001;   // 自动涟漪衰减更慢，活得更久
-} else {
-    ripple.life -= 0.004;   // 手动涟漪保持不变
-}
+                    ripple.life -= 0.001;
+                } else {
+                    ripple.life -= 0.004;
+                }
                 if (ripple.life <= 0 || ripple.radius > ripple.maxRadius) {
                     ripple.isActive = false;
                     toRemove.push(i);
@@ -633,7 +667,7 @@
         }
 
         // ============================================================
-        //  自动涟漪（已修改：高亮时间更长，速度更慢）
+        //  自动涟漪
         // ============================================================
         function scheduleAutoRipple() {
             const delay = PARAMS.autoRippleIntervalMin +
@@ -657,7 +691,6 @@
             for (let node of selected) {
                 const brightFactor = 0.7 + 0.6 * node.baseBrightness;
                 const brightness = PARAMS.autoRippleBrightness * brightFactor;
-                // 高亮时间延长到 1500ms（从 500ms 延长 1 秒）
                 node.highlightUntil = performance.now() + PARAMS.autoRippleHighlightDuration;
                 node.targetBrightness = 1.0;
                 setTimeout(() => { node.targetBrightness = 0.3; }, PARAMS.autoRippleHighlightDuration);
@@ -666,8 +699,7 @@
                 if (!node.lastRippleTime || (now - node.lastRippleTime) >= PARAMS.rippleCooldown) {
                     node.lastRippleTime = now;
                     const angle = Math.random() * Math.PI * 2;
-                    // 创建自动涟漪（isAuto = true，速度会减半）
-                    createRipple(node.x, node.y, brightness,250 ,
+                    createRipple(node.x, node.y, brightness, 250,
                         Math.cos(angle) * 0.3, Math.sin(angle) * 0.3, true);
                 }
             }
@@ -704,7 +736,8 @@
             STATE.mouseInside = true;
             STATE.mouseLastMoveTime = performance.now();
             STATE.mouseStatic = false;
-            if (!STATE.audioReady) initAudio();
+            // 用户交互时触发音乐
+            playBgm();
         }
 
         function onLeave() {
@@ -719,7 +752,7 @@
             const maxR = 80 + brightness * 3 + Math.random() * 40;
             const angle = Math.random() * Math.PI * 2;
             createRipple(pos.x, pos.y, brightness, maxR, Math.cos(angle) * 0.3, Math.sin(angle) * 0.3, false);
-            if (!STATE.audioReady) initAudio();
+            playBgm();
         }
 
         function checkMouseStatic() {
@@ -737,68 +770,6 @@
         window.addEventListener('touchmove', onMove, { passive: false });
         window.addEventListener('touchstart', onTap, { passive: false });
         window.addEventListener('touchend', onLeave, { passive: false });
-
-        // ============================================================
-        //  音频系统
-        // ============================================================
-        async function loadAudioFiles() {
-            try {
-                const ctx = STATE.audioCtx;
-                if (!ctx) return false;
-                const bgmResp = await fetch('bgm.mp3');
-                const bgmArrayBuffer = await bgmResp.arrayBuffer();
-                STATE.bgmBuffer = await ctx.decodeAudioData(bgmArrayBuffer);
-                console.log('✦ 背景音乐加载成功');
-                const waterResp = await fetch('water.mp3');
-                const waterArrayBuffer = await waterResp.arrayBuffer();
-                STATE.waterBuffer = await ctx.decodeAudioData(waterArrayBuffer);
-                console.log('✦ 水声加载成功');
-                return true;
-            } catch (e) {
-                console.warn('✦ 音频文件加载失败:', e);
-                return false;
-            }
-        }
-
-        async function initAudio() {
-            if (STATE.audioReady) return;
-            try {
-                if (!STATE.audioCtx) {
-                    STATE.audioCtx = new(window.AudioContext || window.webkitAudioContext)();
-                }
-                if (STATE.audioCtx.state === 'suspended') {
-                    await STATE.audioCtx.resume();
-                }
-                if (STATE.audioCtx.state !== 'running') {
-                    console.warn('✦ AudioContext 未能启动');
-                    return;
-                }
-
-                const loaded = await loadAudioFiles();
-                if (!loaded) {
-                    console.warn('✦ 音频文件加载失败');
-                    return;
-                }
-
-                const src = STATE.audioCtx.createBufferSource();
-                src.buffer = STATE.bgmBuffer;
-                src.loop = true;
-                const gain = STATE.audioCtx.createGain();
-                gain.gain.setValueAtTime(0.4, STATE.audioCtx.currentTime);
-                src.connect(gain);
-                gain.connect(STATE.audioCtx.destination);
-                src.start(STATE.audioCtx.currentTime);
-                STATE.bgmSource = src;
-                STATE.bgmGain = gain;
-                console.log('✦ 背景音乐已开始播放');
-
-                STATE.audioReady = true;
-                console.log('✦ 音频系统初始化完成 ✓');
-
-            } catch (e) {
-                console.warn('✦ 音频初始化失败:', e);
-            }
-        }
 
         // ============================================================
         //  Resize
@@ -1068,28 +1039,33 @@
         resize();
         draw();
 
-        // 按钮点击跳转
+        // 初始化背景音乐
+        initBgm();
+
+        // 页面加载后尝试自动播放
+        // 注意：浏览器可能会阻止，但至少尝试一次
+        setTimeout(function() {
+            playBgm();
+        }, 500);
+
+        // 按钮点击跳转 + 触发音乐
         document.getElementById('aboutBtn').addEventListener('click', function(e) {
             e.preventDefault();
             window.location.href = this.getAttribute('href');
+            playBgm();
         });
 
-        document.addEventListener('click', () => {
-            if (!STATE.audioReady) initAudio();
-        }, { once: false });
-        document.addEventListener('touchstart', () => {
-            if (!STATE.audioReady) initAudio();
-        }, { once: false });
-
-        setTimeout(() => {
-            if (!STATE.audioReady) console.log('✦ 等待用户交互以激活音频...');
-        }, 1000);
+        // 任何点击/触摸都触发音乐（确保用户手势激活）
+        document.addEventListener('click', function() {
+            playBgm();
+        });
+        document.addEventListener('touchstart', function() {
+            playBgm();
+        });
 
         console.log('✦ Ripple — 光 · 涟漪');
-        console.log('✦ 节点数量按屏幕面积比例: 1920×1080 → 150 个节点');
-        console.log('✦ 自动涟漪高亮时间: 1500ms (延长1秒)');
-        console.log('✦ 自动涟漪速度: 减半 (更慢)');
-        console.log('✦ 关于项目按钮 — 底部5%居中');
+        console.log('✦ 背景音乐: ./bgm.mp3');
+        console.log('✦ 点击页面任意位置播放音乐');
     </script>
 </body>
 </html>
