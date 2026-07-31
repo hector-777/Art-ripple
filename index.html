@@ -814,6 +814,7 @@
         }
 
         function onTap(e) {
+            if (e.target.closest('.nav-link')) return;
             const pos = getPos(e);
             const brightness = PARAMS.manualRippleBrightness + Math.random() * 4;
             const maxR = 80 + brightness * 3 + Math.random() * 40;
