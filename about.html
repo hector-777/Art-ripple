@@ -41,13 +41,15 @@
             max-width: 940px;
             margin: 0 auto;
         }
+
+        /* ----- 語言切換（三語）----- */
         .lang-switch {
             position: fixed;
             top: 28px;
             right: 32px;
             z-index: 100;
             font-size: 14px;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             color: #7a756e;
             background: transparent;
             border: none;
@@ -59,7 +61,7 @@
         }
         .lang-switch:hover {
             color: #e8e0d5;
-            background: rgba(255,255,255,0.03);
+            background: rgba(255, 255, 255, 0.03);
         }
         .lang-switch .active {
             color: #e8e0d5;
@@ -67,8 +69,9 @@
         }
         .lang-switch .sep {
             color: #3d3935;
-            margin: 0 4px;
+            margin: 0 3px;
         }
+
         .section {
             margin-bottom: 140px;
         }
@@ -125,9 +128,18 @@
             background: rgba(232, 224, 213, 0.01);
         }
         @keyframes breatheRipple {
-            0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.3; }
-            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
-            100% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.3; }
+            0% {
+                transform: translate(-50%, -50%) scale(0.6);
+                opacity: 0.3;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(0.6);
+                opacity: 0.3;
+            }
         }
         .divider-soft {
             width: 60px;
@@ -243,36 +255,6 @@
             display: block;
             margin-top: 2px;
         }
-        .proto-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 28px 36px;
-            margin: 24px 0 16px;
-        }
-        .proto-card-mini {
-            background: rgba(255, 255, 255, 0.015);
-            padding: 24px 28px;
-            border-radius: 4px;
-            border-left: 1px solid rgba(232, 224, 213, 0.06);
-        }
-        .proto-card-mini .pcm-title {
-            font-family: 'Noto Serif SC', serif;
-            font-weight: 300;
-            font-size: 18px;
-            color: #e8e0d5;
-            letter-spacing: 1px;
-            margin-bottom: 4px;
-        }
-        .proto-card-mini .pcm-sub {
-            font-size: 14px;
-            color: #8a857e;
-            margin-bottom: 8px;
-        }
-        .proto-card-mini .pcm-desc {
-            font-size: 15px;
-            color: #b0aaa2;
-            line-height: 1.7;
-        }
         .proto-features {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -315,25 +297,69 @@
             color: #4d4944;
             letter-spacing: 1px;
         }
-        .lang-zh, .lang-en { transition: opacity 0.2s ease; }
-        .lang-zh.hidden, .lang-en.hidden { display: none; }
+
+        /* ----- 三語切換（隱藏/顯示） ----- */
+        .lang-zh,
+        .lang-zh-hans,
+        .lang-en {
+            transition: opacity 0.2s ease;
+        }
+        .lang-zh.hidden,
+        .lang-zh-hans.hidden,
+        .lang-en.hidden {
+            display: none;
+        }
+
+        /* ----- 響應式 ----- */
         @media (max-width: 720px) {
-            body { padding: 0 18px 60px; }
-            .hero { padding-top: 70px; margin-bottom: 70px; }
-            .section { margin-bottom: 100px; }
-            .three-col { grid-template-columns: 1fr; gap: 32px; }
-            .feedback-grid { grid-template-columns: 1fr; gap: 2px; font-size: 14px; }
-            .feedback-grid .fg-header { display: none; }
-            .feedback-grid .fg-item { border-bottom: none; padding: 4px 0; }
-            .feedback-grid .fg-item::before { content: "● "; color: #5a554e; font-size: 10px; }
-            .proto-grid { grid-template-columns: 1fr; gap: 20px; }
-            .proto-features { grid-template-columns: 1fr; }
-            .lang-switch { top: 16px; right: 16px; font-size: 13px; padding: 4px 8px; }
-            .hero-greeting { font-size: 28px; }
+            body {
+                padding: 0 18px 60px;
+            }
+            .hero {
+                padding-top: 70px;
+                margin-bottom: 70px;
+            }
+            .section {
+                margin-bottom: 100px;
+            }
+            .three-col {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+            .feedback-grid {
+                grid-template-columns: 1fr;
+                gap: 2px;
+                font-size: 14px;
+            }
+            .feedback-grid .fg-header {
+                display: none;
+            }
+            .feedback-grid .fg-item {
+                border-bottom: none;
+                padding: 4px 0;
+            }
+            .feedback-grid .fg-item::before {
+                content: "● ";
+                color: #5a554e;
+                font-size: 10px;
+            }
+            .proto-features {
+                grid-template-columns: 1fr;
+            }
+            .lang-switch {
+                top: 16px;
+                right: 16px;
+                font-size: 13px;
+                padding: 4px 8px;
+            }
+            .hero-greeting {
+                font-size: 28px;
+            }
         }
         @media (max-width: 420px) {
-            .hero-greeting { font-size: 24px; }
-            .proto-card-mini { padding: 16px; }
+            .hero-greeting {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
@@ -341,8 +367,11 @@
 
     <canvas id="bg-canvas"></canvas>
 
+    <!-- 語言切換按鈕（三語） -->
     <button class="lang-switch" id="langToggle" aria-label="切換語言 / Toggle language">
         <span id="langZhLabel" class="active">繁</span>
+        <span class="sep">/</span>
+        <span id="langZhHansLabel">简</span>
         <span class="sep">/</span>
         <span id="langEnLabel">EN</span>
     </button>
@@ -356,6 +385,13 @@
                 <div class="hero-desc">
                     它還不是一件完成的作品，更像是一份還在生長的創作筆記。<br />
                     我想跟你分享：我想做一件什麼樣的東西、中間經歷了哪些嘗試，以及為什麼你眼前會有這個可以互動的網頁。
+                </div>
+            </div>
+            <div class="lang-zh-hans hidden">
+                <div class="hero-greeting">嗨，你现在看到的，<br />是我正在想的一个尝试。</div>
+                <div class="hero-desc">
+                    它还不是很一件完成的作品，更像是一份还在生长的创作笔记。<br />
+                    我想跟你分享：我想做一件什么样的东西、中间经历了哪些尝试，以及为什么你眼前会有这个可以互动的网页。
                 </div>
             </div>
             <div class="lang-en hidden">
@@ -376,6 +412,7 @@
         <!-- ===== 我想做一件什麼樣的東西 ===== -->
         <section class="section">
             <h2 class="lang-zh">我想做一件什麼樣的東西</h2>
+            <h2 class="lang-zh-hans hidden">我想做一件什么样的东西</h2>
             <h2 class="lang-en hidden">What I'm Trying to Make</h2>
             <div class="body-text">
                 <div class="lang-zh">
@@ -385,6 +422,14 @@
                     <p>你伸手碰了一根水管。它晃了一下，裡面的水開始波動，光影跟著晃動，像漣漪一樣擴散開來。水管末端掛著的小鈴鐺或貝殼，發出輕輕的碰撞聲——那是物理的聲音，不是喇叭播出來的。</p>
                     <p>你看不清全貌。光只追隨你。每一步都是在探索。</p>
                     <p class="muted">安靜，緩慢，有一點孤獨感，但光始終陪著你。</p>
+                </div>
+                <div class="lang-zh-hans hidden">
+                    <p><span class="highlight">我想象中的画面是这样的——</span></p>
+                    <p>你走进一个完全黑暗的房间。脚下是地板，但你看不到边界。</p>
+                    <p>周围垂落着许多透明的软管，里面注满了水。光从你头顶的位置打下来，只照亮你所在的那一小片区域。你往前走，光跟着你走，新的水管从黑暗中浮现；你回头，身后的水管重新隐入黑暗。</p>
+                    <p>你伸手碰了一根水管。它晃了一下，里面的水开始波动，光影跟着晃动，像涟漪一样扩散开来。水管末端挂着的小铃铛或贝壳，发出轻轻的碰撞声——那是物理的声音，不是喇叭播出来的。</p>
+                    <p>你看不清全貌。光只追随你。每一步都是在探索。</p>
+                    <p class="muted">安静，缓慢，有一点孤独感，但光始终陪着你。</p>
                 </div>
                 <div class="lang-en hidden">
                     <p><span class="highlight">This is the picture in my head——</span></p>
@@ -400,36 +445,45 @@
         <!-- ===== 核心理念（三列） ===== -->
         <section class="section">
             <h2 class="lang-zh">這件東西的核心理念</h2>
+            <h2 class="lang-zh-hans hidden">这件东西的核心理念</h2>
             <h2 class="lang-en hidden">Core Ideas</h2>
             <div class="body-text" style="margin-bottom:20px;">
                 <div class="lang-zh">我希望它很簡單——簡單到不需要任何說明。</div>
+                <div class="lang-zh-hans hidden">我希望它很简单——简单到不需要任何说明。</div>
                 <div class="lang-en hidden">I want this to be simple — simple enough to need no explanation.</div>
             </div>
             <div class="three-col">
                 <div>
                     <div class="col-title lang-zh">去掉故事</div>
+                    <div class="col-title lang-zh-hans hidden">去掉故事</div>
                     <div class="col-title lang-en hidden">No Story</div>
                     <div class="col-desc lang-zh">我不塞給你任何情節或情緒標籤。它就是一個空間，你走進去，你感受。</div>
+                    <div class="col-desc lang-zh-hans hidden">我不塞给你任何情节或情绪标签。它就是一个空间，你走进去，你感受。</div>
                     <div class="col-desc lang-en hidden">I'm not feeding you a narrative or emotional labels. It's just a space. You walk in. You feel.</div>
                 </div>
                 <div>
                     <div class="col-title lang-zh">身體就是控制器</div>
+                    <div class="col-title lang-zh-hans hidden">身体就是控制器</div>
                     <div class="col-title lang-en hidden">Body as Controller</div>
                     <div class="col-desc lang-zh">你不需要學任何操作。走進去，光就動。伸手碰，漣漪就散開。</div>
+                    <div class="col-desc lang-zh-hans hidden">你不需要学任何操作。走进去，光就动。伸手碰，涟漪就散开。</div>
                     <div class="col-desc lang-en hidden">No instructions needed. Walk in, the light moves. Reach out, ripples spread.</div>
                 </div>
                 <div>
                     <div class="col-title lang-zh">留一點空白</div>
+                    <div class="col-title lang-zh-hans hidden">留一点空白</div>
                     <div class="col-title lang-en hidden">Leave Room</div>
                     <div class="col-desc lang-zh">我不說你「應該」感覺到什麼。每個人看到的、聽到的、感受到的，都是屬於自己的版本。</div>
+                    <div class="col-desc lang-zh-hans hidden">我不说你「应该」感觉到什么。每个人看到的、听到的、感受到的，都是属于自己的版本。</div>
                     <div class="col-desc lang-en hidden">I won't tell you what you "should" feel. What you see, hear, and sense is your own version.</div>
                 </div>
             </div>
         </section>
 
-        <!-- ===== 材質的選擇（簡約版） ===== -->
+        <!-- ===== 材質的選擇 ===== -->
         <section class="section">
             <h2 class="lang-zh">材質的選擇</h2>
+            <h2 class="lang-zh-hans hidden">材质的选择</h2>
             <h2 class="lang-en hidden">Choosing the Material</h2>
             <div class="body-text">
                 <div class="lang-zh">
@@ -440,6 +494,15 @@
                     <p>水管末端掛上小鈴鐺或貝殼，水的晃動會帶動它們發出輕響。那是真實的物理碰撞，不是喇叭。</p>
                     <p class="muted">——</p>
                     <p class="muted">我還沒真正動手試過。但這是我現在最想做的一件事。</p>
+                </div>
+                <div class="lang-zh-hans hidden">
+                    <p>材质这件事，我想了很久。</p>
+                    <p>我一开始想用细线，因为够轻、够隐形。但后来发现，细线在光里几乎看不见。我要的是「有体积感的东西」——它必须在黑暗里存在，但又不是一个实心的柱子挡在你面前。</p>
+                    <p>后来我想到了透明水管，里面灌水。</p>
+                    <p>我脑子里的画面是这样的：光穿过水的时候，会折射、会散射。整根管子会微微发光，像一根透明的光柱。当你碰到它，水在里面晃动——那个晃动会带动光影变化，像涟漪一样扩散开来。</p>
+                    <p>水管末端挂上小铃铛或贝壳，水的晃动会带动它们发出轻响。那是真实的物理碰撞，不是喇叭。</p>
+                    <p class="muted">——</p>
+                    <p class="muted">我还没真正动手试过。但这是我现在最想做的一件事。</p>
                 </div>
                 <div class="lang-en hidden">
                     <p>I spent a long time thinking about material.</p>
@@ -456,6 +519,7 @@
         <!-- ===== 光的邏輯 · 互動反饋 ===== -->
         <section class="section">
             <h2 class="lang-zh">光的邏輯，與你的身體</h2>
+            <h2 class="lang-zh-hans hidden">光的逻辑，与你的身体</h2>
             <h2 class="lang-en hidden">Light & Your Body</h2>
             <div class="body-text">
                 <div class="lang-zh">
@@ -463,6 +527,12 @@
                     <p>光只來自於你頭頂的那一束——它會跟著你移動。你走到哪，光就跟到哪。所以你看不到整個空間的全貌，只能看到你所在位置的周圍。</p>
                     <p>你碰水管的時候，它會晃。水的晃動帶動光影波動，漣漪就出現了。風鈴的響聲是隨機的、物理的、每一次都不太一樣。你繼續往前走，新的水管從黑暗中浮現，身後的水管重新消失。</p>
                     <p class="muted">一切都很慢。一切都需要你的身體來觸發。</p>
+                </div>
+                <div class="lang-zh-hans hidden">
+                    <p>房间是全黑的。没有环境光，没有「底光」。</p>
+                    <p>光只来自于你头顶的那一束——它会跟着你移动。你走到哪，光就跟到哪。所以你看不到整个空间的全貌，只能看到你所在位置的周围。</p>
+                    <p>你碰水管的时候，它会晃。水的晃动带动光影波动，涟漪就出现了。风铃的响声是随机的、物理的、每一次都不太一样。你继续往前走，新的水管从黑暗中浮现，身后的水管重新消失。</p>
+                    <p class="muted">一切都很慢。一切都需要你的身体来触发。</p>
                 </div>
                 <div class="lang-en hidden">
                     <p>The room is completely dark. No ambient light, no "base light."</p>
@@ -473,19 +543,64 @@
             </div>
             <div class="lang-zh">
                 <div class="feedback-grid">
-                    <div class="fg-header">動作</div><div class="fg-header">物理反饋</div><div class="fg-header">視覺反饋</div><div class="fg-header">聲音反饋</div>
-                    <div class="fg-item">走入空間</div><div class="fg-item fg-item-light">—</div><div class="fg-item">光束跟隨，照亮周圍</div><div class="fg-item">極低頻環境嗡鳴</div>
-                    <div class="fg-item">觸碰水管</div><div class="fg-item">水管晃動</div><div class="fg-item">管內水晃動，光影漣漪</div><div class="fg-item">風鈴輕響（物理）</div>
-                    <div class="fg-item">繼續移動</div><div class="fg-item fg-item-light">—</div><div class="fg-item">光區移動，新浮現舊隱去</div><div class="fg-item fg-item-light">—</div>
+                    <div class="fg-header">動作</div>
+                    <div class="fg-header">物理反饋</div>
+                    <div class="fg-header">視覺反饋</div>
+                    <div class="fg-header">聲音反饋</div>
+                    <div class="fg-item">走入空間</div>
+                    <div class="fg-item fg-item-light">—</div>
+                    <div class="fg-item">光束跟隨，照亮周圍</div>
+                    <div class="fg-item">極低頻環境嗡鳴</div>
+                    <div class="fg-item">觸碰水管</div>
+                    <div class="fg-item">水管晃動</div>
+                    <div class="fg-item">管內水晃動，光影漣漪</div>
+                    <div class="fg-item">風鈴輕響（物理）</div>
+                    <div class="fg-item">繼續移動</div>
+                    <div class="fg-item fg-item-light">—</div>
+                    <div class="fg-item">光區移動，新浮現舊隱去</div>
+                    <div class="fg-item fg-item-light">—</div>
                 </div>
                 <div class="feedback-note">所有反饋都是物理的、有機的、不可完全預測的。</div>
             </div>
+            <div class="lang-zh-hans hidden">
+                <div class="feedback-grid">
+                    <div class="fg-header">动作</div>
+                    <div class="fg-header">物理反馈</div>
+                    <div class="fg-header">视觉反馈</div>
+                    <div class="fg-header">声音反馈</div>
+                    <div class="fg-item">走入空间</div>
+                    <div class="fg-item fg-item-light">—</div>
+                    <div class="fg-item">光束跟随，照亮周围</div>
+                    <div class="fg-item">极低频环境嗡鸣</div>
+                    <div class="fg-item">触碰水管</div>
+                    <div class="fg-item">水管晃动</div>
+                    <div class="fg-item">管内水晃动，光影涟漪</div>
+                    <div class="fg-item">风铃轻响（物理）</div>
+                    <div class="fg-item">继续移动</div>
+                    <div class="fg-item fg-item-light">—</div>
+                    <div class="fg-item">光区移动，新浮现旧隐去</div>
+                    <div class="fg-item fg-item-light">—</div>
+                </div>
+                <div class="feedback-note">所有反馈都是物理的、有机的、不可完全预测的。</div>
+            </div>
             <div class="lang-en hidden">
                 <div class="feedback-grid">
-                    <div class="fg-header">Action</div><div class="fg-header">Physical</div><div class="fg-header">Visual</div><div class="fg-header">Sound</div>
-                    <div class="fg-item">Walk in</div><div class="fg-item fg-item-light">—</div><div class="fg-item">Beam follows, illuminates</div><div class="fg-item">Low drone</div>
-                    <div class="fg-item">Touch hose</div><div class="fg-item">Sways</div><div class="fg-item">Water moves, light ripples</div><div class="fg-item">Chime sounds (physical)</div>
-                    <div class="fg-item">Move on</div><div class="fg-item fg-item-light">—</div><div class="fg-item">Zone shifts, emerge/fade</div><div class="fg-item fg-item-light">—</div>
+                    <div class="fg-header">Action</div>
+                    <div class="fg-header">Physical</div>
+                    <div class="fg-header">Visual</div>
+                    <div class="fg-header">Sound</div>
+                    <div class="fg-item">Walk in</div>
+                    <div class="fg-item fg-item-light">—</div>
+                    <div class="fg-item">Beam follows, illuminates</div>
+                    <div class="fg-item">Low drone</div>
+                    <div class="fg-item">Touch hose</div>
+                    <div class="fg-item">Sways</div>
+                    <div class="fg-item">Water moves, light ripples</div>
+                    <div class="fg-item">Chime sounds (physical)</div>
+                    <div class="fg-item">Move on</div>
+                    <div class="fg-item fg-item-light">—</div>
+                    <div class="fg-item">Zone shifts, emerge/fade</div>
+                    <div class="fg-item fg-item-light">—</div>
                 </div>
                 <div class="feedback-note">All feedback is physical, organic, and not entirely predictable.</div>
             </div>
@@ -494,36 +609,43 @@
         <!-- ===== 設計過程（時間線） ===== -->
         <section class="section">
             <h2 class="lang-zh">它是怎麼一步一步長出來的</h2>
+            <h2 class="lang-zh-hans hidden">它是怎么一步一步长出来的</h2>
             <h2 class="lang-en hidden">How It Grew, Step by Step</h2>
             <div class="timeline">
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content lang-zh"><strong>六個零散的畫面</strong> — 黑白投影、泡泡音樂、光在煙霧裡的體積感、水與電、欲望與線條</div>
+                    <div class="timeline-content lang-zh-hans hidden"><strong>六个零散的画面</strong> — 黑白投影、泡泡音乐、光在烟雾里的体积感、水与电、欲望与线条</div>
                     <div class="timeline-content lang-en hidden"><strong>Six scattered images</strong> — B&W projection, bubbles & music, light in volume, water & electricity, desire & threads</div>
                 </div>
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content lang-zh"><strong>版本1：敘事嘗試</strong> — 想讓線條承載「好／壞故事」的情緒 → 太複雜，把空間鎖死了</div>
+                    <div class="timeline-content lang-zh-hans hidden"><strong>版本1：叙事尝试</strong> — 想让线条承载「好／坏故事」的情绪 → 太复杂，把空间锁死了</div>
                     <div class="timeline-content lang-en hidden"><strong>V1: Narrative attempt</strong> — Tried to carry "good/bad story" emotions → Too complex, locked the space shut</div>
                 </div>
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content lang-zh"><strong>版本2：砍掉故事</strong> — 只留一個動作：<strong>觸碰，然後漣漪擴散</strong></div>
+                    <div class="timeline-content lang-zh-hans hidden"><strong>版本2：砍掉故事</strong> — 只留一个动作：<strong>触碰，然后涟漪扩散</strong></div>
                     <div class="timeline-content lang-en hidden"><strong>V2: Cut the story</strong> — Left only one action: <strong>Touch, and ripples spread</strong></div>
                 </div>
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content lang-zh"><strong>版本3：材質探索</strong> — 細線 → 透明魚線 → 透明水管＋水，終於找到光在水中折射的有機感</div>
+                    <div class="timeline-content lang-zh-hans hidden"><strong>版本3：材质探索</strong> — 细线 → 透明鱼线 → 透明水管＋水，终于找到光在水中折射的有机感</div>
                     <div class="timeline-content lang-en hidden"><strong>V3: Material exploration</strong> — Thread → fishing line → hoses + water, finally found organic light refraction</div>
                 </div>
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content lang-zh"><strong>版本4：光的邏輯</strong> — 全黑，光只跟著人走，探索感出現了</div>
+                    <div class="timeline-content lang-zh-hans hidden"><strong>版本4：光的逻辑</strong> — 全黑，光只跟着人走，探索感出现了</div>
                     <div class="timeline-content lang-en hidden"><strong>V4: Logic of light</strong> — Complete darkness, light follows only the person — exploration emerged</div>
                 </div>
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
                     <div class="timeline-content lang-zh"><strong>現在：沉澱為「光 · 漣漪」</strong> — 簡單、直接、等待實體落地</div>
+                    <div class="timeline-content lang-zh-hans hidden"><strong>现在：沉淀为「光 · 涟漪」</strong> — 简单、直接、等待实体落地</div>
                     <div class="timeline-content lang-en hidden"><strong>Now: Settled as 「Ripple」</strong> — Simple, direct, waiting to be built</div>
                 </div>
             </div>
@@ -532,6 +654,7 @@
         <!-- ===== 為什麼先做這個網頁？ ===== -->
         <section class="section">
             <h2 class="lang-zh">為什麼先做這個網頁？</h2>
+            <h2 class="lang-zh-hans hidden">为什么先做这个网页？</h2>
             <h2 class="lang-en hidden">Why Build a Website First?</h2>
             <div class="body-text">
                 <div class="lang-zh">
@@ -539,94 +662,63 @@
                     <p>在還沒辦法直接做實體之前，我決定先用程式碼做一個數位原型。也就是你看到的第一頁。</p>
                     <p>它有幾個目的：</p>
                     <p>・ <span class="highlight">驗證概念</span> — 這個互動邏輯真的成立嗎？光隨人動的感覺對不對？<br />
-                    ・ <span class="highlight">快速迭代</span> — 改程式比改實體快得多，我可以一直調到感覺對了為止。<br />
-                    ・ <span class="highlight">拿來溝通</span> — 讓其他人（包括你）可以實際體驗，而不是只看設計圖。</p>
+                        ・ <span class="highlight">快速迭代</span> — 改程式比改實體快得多，我可以一直調到感覺對了為止。<br />
+                        ・ <span class="highlight">拿來溝通</span> — 讓其他人（包括你）可以實際體驗，而不是只看設計圖。</p>
                     <p class="muted">所以這個網站不是「作品的替代品」，它是這個嘗試的草稿、測試場、溝通工具。</p>
+                </div>
+                <div class="lang-zh-hans hidden">
+                    <p>实体装置要做起来，牵涉到很多工程问题——水循环、水管密封、人体追踪、投影对位⋯⋯每一项都需要时间和资源去试。</p>
+                    <p>在还没办法直接做实体之前，我决定先用代码做一个数字原型。也就是你看到的第一页。</p>
+                    <p>它有几个目的：</p>
+                    <p>・ <span class="highlight">验证概念</span> — 这个互动逻辑真的成立吗？光随人动的感觉对不对？<br />
+                        ・ <span class="highlight">快速迭代</span> — 改程序比改实体快得多，我可以一直调到感觉对了为止。<br />
+                        ・ <span class="highlight">拿来沟通</span> — 让其他人（包括你）可以实际体验，而不是只看设计图。</p>
+                    <p class="muted">所以这个网站不是「作品的替代品」，它是这个尝试的草稿、测试场、沟通工具。</p>
                 </div>
                 <div class="lang-en hidden">
                     <p>Building the physical installation involves a lot of engineering — water circulation, hose sealing, body tracking, projection mapping. Each takes time and resources to test.</p>
                     <p>Before I could build the real thing, I decided to make a digital prototype with code. That's the first page you see.</p>
                     <p>It serves a few purposes:</p>
                     <p>・ <span class="highlight">Validate the concept</span> — Does this interaction actually work? Does "light follows person" feel right?<br />
-                    ・ <span class="highlight">Iterate fast</span> — Changing code is faster than changing materials. I can tweak until it feels right.<br />
-                    ・ <span class="highlight">Communicate</span> — Let others (including you) actually experience it, not just look at sketches.</p>
+                        ・ <span class="highlight">Iterate fast</span> — Changing code is faster than changing materials. I can tweak until it feels right.<br />
+                        ・ <span class="highlight">Communicate</span> — Let others (including you) actually experience it, not just look at sketches.</p>
                     <p class="muted">So this website isn't a replacement for the installation. It's a sketch, a testing ground, a communication tool.</p>
                 </div>
             </div>
         </section>
 
-        <!-- ===== 這個網頁做了什麼 + 明暗雙生 ===== -->
+        <!-- ===== 這個網頁做了什麼（無明暗雙生） ===== -->
         <section class="section">
             <h2 class="lang-zh">這個網頁做了什麼</h2>
+            <h2 class="lang-zh-hans hidden">这个网页做了什么</h2>
             <h2 class="lang-en hidden">What This Web Page Does</h2>
 
             <div class="body-text">
                 <div class="lang-zh">
-                    <p><span class="highlight">第一頁（index.html）做了幾件事：</span></p>
+                    <p><span class="highlight">第一頁做了幾件事：</span></p>
                     <p>我用 150 個隨機散布的節點來模擬水管的叢林。滑鼠就是那一束光——你移動滑鼠，光就移動。靠近節點的時候，節點會被輕輕推開，然後產生漣漪。</p>
                     <p>漣漪不是完美的圓形。它會跟著滑鼠移動的方向拉伸，像水波被吹往同一個方向。漣漪也會在節點之間擴散，一層一層衰減下去。節點被推開之後，會慢慢地擺回來——像真實的水管被碰到之後的晃動。</p>
                     <p>即使你什麼都不做，每隔十幾秒也會有 1-2 個節點自動泛起漣漪。因為這個空間應該是活的，不是死寂的。</p>
+                    <p class="muted">你感受到的，就是你能帶走的。那個感受可能說不清楚，可能當場就忘了。但你的身體會記住它。</p>
+                </div>
+                <div class="lang-zh-hans hidden">
+                    <p><span class="highlight">第一页做了几件事：</span></p>
+                    <p>我用 150 个随机散布的节点来模拟水管的丛林。鼠标就是那一束光——你移动鼠标，光就移动。靠近节点的时候，节点会被轻轻推开，然后产生涟漪。</p>
+                    <p>涟漪不是完美的圆形。它会跟着鼠标移动的方向拉伸，像水波被吹往同一个方向。涟漪也会在节点之间扩散，一层一层衰减下去。节点被推开之后，会慢慢地摆回来——像真实的水管被碰到之后的晃动。</p>
+                    <p>即使你什么都不做，每隔十几秒也会有 1-2 个节点自动泛起涟漪。因为这个空间应该是活的，不是死寂的。</p>
+                    <p class="muted">你感受到的，就是你能带走的。那个感受可能说不清楚，可能当场就忘了。但你的身体会记住它。</p>
                 </div>
                 <div class="lang-en hidden">
-                    <p><span class="highlight">What the first page (index.html) does:</span></p>
+                    <p><span class="highlight">What the first page does:</span></p>
                     <p>I used 150 randomly scattered nodes to simulate the hose jungle. The mouse is that beam of light — you move it, the light moves. When you get close to a node, it gets pushed slightly, and a ripple spreads.</p>
                     <p>The ripples aren't perfect circles. They stretch in the direction you move the mouse, like water waves being blown in one direction. Ripples also spread between nodes, fading layer by layer. After being pushed, the node slowly swings back — like a real hose swaying after being touched.</p>
                     <p>Even if you do nothing, every ten seconds or so, 1-2 nodes automatically ripple. This space should feel alive, not dead.</p>
-                </div>
-            </div>
-
-            <!-- 明暗雙生 -->
-            <div style="margin-top: 48px;">
-                <h3 style="font-family:'Noto Serif SC',serif; font-weight:300; font-size:22px; color:#e8e0d5; letter-spacing:2px; margin-bottom:16px;" class="lang-zh">關於暗色和亮色</h3>
-                <h3 style="font-family:'Noto Serif SC',serif; font-weight:300; font-size:22px; color:#e8e0d5; letter-spacing:2px; margin-bottom:16px;" class="lang-en hidden">On Dark and Light</h3>
-
-                <div class="body-text">
-                    <div class="lang-zh">
-                        <p>一開始我做了暗色版本。朋友看了說：「好像星座喔。」</p>
-                        <p>我當下覺得不太對。我要的不是星空，是<span class="highlight">漣漪</span>。但我也理解為什麼他們會這樣想——深色背景上的發光點，人眼天生會把它們看成星星。</p>
-                        <p>可是裝置本身其實有兩種狀態：關燈的時候，你看到的是光穿過水產生的發光漣漪；開燈的時候，你看到的是水晃動時投下的影子漣漪。</p>
-                        <p>所以我在網頁裡也做了兩個模式：</p>
-                    </div>
-                    <div class="lang-en hidden">
-                        <p>I made the dark version first. Friends looked at it and said: "It's like a constellation."</p>
-                        <p>I felt something was off. I wasn't aiming for a starry sky — I wanted <span class="highlight">ripples</span>. But I also understand why they said that — human eyes naturally see glowing dots on a dark background as stars.</p>
-                        <p>But the installation itself has two states. When the lights are off, you see luminous ripples from light passing through water. When the lights are on, you see shadow ripples cast by the moving water.</p>
-                        <p>So I built two modes into the web page:</p>
-                    </div>
-                </div>
-
-                <div class="proto-grid">
-                    <div class="proto-card-mini">
-                        <div class="pcm-title lang-zh">暗色模式</div>
-                        <div class="pcm-title lang-en hidden">Dark Mode</div>
-                        <div class="pcm-sub lang-zh">光之漣漪</div>
-                        <div class="pcm-sub lang-en hidden">Light Ripple</div>
-                        <div class="pcm-desc lang-zh">深色背景，發光的節點，亮白的漣漪。<br />對應裝置的「關燈」狀態。</div>
-                        <div class="pcm-desc lang-en hidden">Dark background, glowing nodes, bright white ripples.<br />Corresponds to "lights off" in the installation.</div>
-                    </div>
-                    <div class="proto-card-mini">
-                        <div class="pcm-title lang-zh">亮色模式</div>
-                        <div class="pcm-title lang-en hidden">Light Mode</div>
-                        <div class="pcm-sub lang-zh">影之漣漪</div>
-                        <div class="pcm-sub lang-en hidden">Shadow Ripple</div>
-                        <div class="pcm-desc lang-zh">暖白背景，淺灰的節點，暖灰的漣漪。<br />對應裝置的「開燈」狀態，看的是「影」。</div>
-                        <div class="pcm-desc lang-en hidden">Warm white bg, light grey nodes, warm grey ripples.<br />Corresponds to "lights on" — looking at shadows.</div>
-                    </div>
-                </div>
-
-                <div class="body-text">
-                    <div class="lang-zh">
-                        <p>你點一下角落的按鈕，就可以在兩種模式之間切換，像在裝置裡開燈關燈一樣。</p>
-                        <p class="muted">兩種模式說的是同一件事：<span class="highlight">水在動，漣漪在擴散。</span></p>
-                    </div>
-                    <div class="lang-en hidden">
-                        <p>Click the toggle in the corner to switch between them — like turning the lights off and on in the installation.</p>
-                        <p class="muted">Both modes speak the same thing: <span class="highlight">water moves, ripples spread.</span></p>
-                    </div>
+                    <p class="muted">What you feel is what you take with you. You may not be able to name it, you may forget it in the moment. But your body will remember.</p>
                 </div>
             </div>
 
             <a href="index.html" class="btn-experience lang-zh">去玩第一頁 →</a>
+            <a href="index.html" class="btn-experience lang-zh-hans hidden">去玩第一页 →</a>
             <a href="index.html" class="btn-experience lang-en hidden">Go play the first page →</a>
         </section>
 
@@ -637,6 +729,11 @@
                     <p style="font-size:18px; color:#e8e0d5;">如果你看到這裡了，謝謝你願意聽我聊這些。</p>
                     <p>這還不算一件完整的作品，它還在長。之後實體裝置做出來了，我會補上照片和影片。</p>
                     <p>在那之前，你可以先去玩第一頁 —— 然後告訴我你看到了什麼。每個人看到的都不太一樣，我很想知道你看到的是什麼。</p>
+                </div>
+                <div class="lang-zh-hans hidden">
+                    <p style="font-size:18px; color:#e8e0d5;">如果你看到这里了，谢谢你愿意听我聊这些。</p>
+                    <p>这还不算一件完整的作品，它还在长。之后实体装置做出来了，我会补上照片和视频。</p>
+                    <p>在那之前，你可以先去玩第一页 —— 然后告诉我你看到了什么。每个人看到的都不太一样，我很想知道你看到的是什么。</p>
                 </div>
                 <div class="lang-en hidden">
                     <p style="font-size:18px; color:#e8e0d5;">If you've read this far, thank you for listening.</p>
@@ -649,12 +746,16 @@
         <!-- ===== FOOTER ===== -->
         <div class="footer">
             <span class="lang-zh">光 · 漣漪 ｜ 創作筆記 ｜ 2026</span>
+            <span class="lang-zh-hans hidden">光 · 涟漪 ｜ 创作笔记 ｜ 2026</span>
             <span class="lang-en hidden">Ripple ｜ Creative Notes ｜ 2026</span>
         </div>
 
     </div>
 
     <script>
+        // ============================================================
+        //  背景 Canvas：巨型漣漪（極淡白色，慢速呼吸）
+        // ============================================================
         (function backgroundRipples() {
             const canvas = document.getElementById('bg-canvas');
             const ctx = canvas.getContext('2d');
@@ -703,35 +804,56 @@
             draw();
         })();
 
+        // ============================================================
+        //  語言切換（繁 / 简 / EN）
+        // ============================================================
         (function langToggle() {
             const btn = document.getElementById('langToggle');
             const zhLabel = document.getElementById('langZhLabel');
+            const zhHansLabel = document.getElementById('langZhHansLabel');
             const enLabel = document.getElementById('langEnLabel');
+
             const zhElements = document.querySelectorAll('.lang-zh');
+            const zhHansElements = document.querySelectorAll('.lang-zh-hans');
             const enElements = document.querySelectorAll('.lang-en');
 
-            let currentLang = 'zh';
+            const labels = [zhLabel, zhHansLabel, enLabel];
+            const allElements = [
+                ...zhElements,
+                ...zhHansElements,
+                ...enElements
+            ];
+
+            let currentLang = 'zh'; // 'zh' | 'hans' | 'en'
 
             function setLang(lang) {
                 currentLang = lang;
+                // 全部隱藏
+                zhElements.forEach(el => el.classList.add('hidden'));
+                zhHansElements.forEach(el => el.classList.add('hidden'));
+                enElements.forEach(el => el.classList.add('hidden'));
+                // 取消所有標籤高亮
+                labels.forEach(el => el.classList.remove('active'));
+
                 if (lang === 'zh') {
                     zhElements.forEach(el => el.classList.remove('hidden'));
-                    enElements.forEach(el => el.classList.add('hidden'));
                     zhLabel.classList.add('active');
-                    enLabel.classList.remove('active');
+                } else if (lang === 'hans') {
+                    zhHansElements.forEach(el => el.classList.remove('hidden'));
+                    zhHansLabel.classList.add('active');
                 } else {
-                    zhElements.forEach(el => el.classList.add('hidden'));
                     enElements.forEach(el => el.classList.remove('hidden'));
-                    zhLabel.classList.remove('active');
                     enLabel.classList.add('active');
                 }
             }
 
             btn.addEventListener('click', () => {
-                const next = currentLang === 'zh' ? 'en' : 'zh';
-                setLang(next);
+                if (currentLang === 'zh') setLang('hans');
+                else if (currentLang === 'hans') setLang('en');
+                else setLang('zh');
             });
 
+            // 初始：繁體
             setLang('zh');
         })();
     </script>
